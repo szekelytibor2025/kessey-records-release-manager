@@ -32,7 +32,10 @@ Deno.serve(async (req) => {
     // Call Supabase Edge Function to process the ZIP
     const supabaseRes = await fetch(SUPABASE_FUNCTION_URL, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${ZIP_WEBHOOK_SECRET}`
+      },
       body: JSON.stringify({
         job_id,
         file_url: job.file_url,
