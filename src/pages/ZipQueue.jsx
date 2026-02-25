@@ -249,7 +249,7 @@ export default function ZipQueue() {
           <h2 className="text-sm font-semibold text-amber-400 uppercase tracking-wider flex items-center gap-2">
             <Loader2 className="w-4 h-4 animate-spin" /> Feldolgozás alatt
           </h2>
-          {processing.map(j => <JobCard key={j.id} job={j} onDelete={deleteMutation.mutate} />)}
+          {processing.map(j => <JobCard key={j.id} job={j} onDelete={(id) => deleteMutation.mutate({ id })} />)}
         </div>
       )}
 
@@ -259,7 +259,7 @@ export default function ZipQueue() {
           <h2 className="text-sm font-semibold text-slate-400 uppercase tracking-wider flex items-center gap-2">
             <Clock className="w-4 h-4" /> Várólistán ({queued.length})
           </h2>
-          {queued.map(j => <JobCard key={j.id} job={j} onDelete={deleteMutation.mutate} />)}
+          {queued.map(j => <JobCard key={j.id} job={j} onDelete={(id) => deleteMutation.mutate({ id })} />)}
         </div>
       )}
 
@@ -269,7 +269,7 @@ export default function ZipQueue() {
           <h2 className="text-sm font-semibold text-slate-400 uppercase tracking-wider flex items-center gap-2">
             <CheckCircle2 className="w-4 h-4" /> Befejezett feladatok
           </h2>
-          {done.map(j => <JobCard key={j.id} job={j} onDelete={deleteMutation.mutate} />)}
+          {done.map(j => <JobCard key={j.id} job={j} onDelete={(id) => deleteMutation.mutate({ id })} />)}
         </div>
       )}
 
