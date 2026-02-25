@@ -327,6 +327,7 @@ export default function Settings() {
                 <pre className="bg-slate-950 border border-slate-700 rounded-lg p-4 text-xs text-slate-300 overflow-auto max-h-96">
 {`// Supabase Edge Function: process-zip-job
 // Deploy: supabase functions deploy process-zip-job --allow-cors
+// Environment: MINIO_ENDPOINT, MINIO_ACCESS_KEY, MINIO_SECRET_KEY, MINIO_BUCKET_NAME, ZIP_WEBHOOK_SECRET, BASE44_WEBHOOK_URL
 
 import * as fflate from "https://cdn.jsdelivr.net/npm/fflate@0.8.2/+esm";
 
@@ -334,7 +335,24 @@ const MINIO_ENDPOINT = Deno.env.get("MINIO_ENDPOINT") || "";
 const MINIO_ACCESS_KEY = Deno.env.get("MINIO_ACCESS_KEY");
 const MINIO_SECRET_KEY = Deno.env.get("MINIO_SECRET_KEY");
 const MINIO_BUCKET = Deno.env.get("MINIO_BUCKET_NAME");
-const BASE44_WEBHOOK_SECRET = Deno.env.get("BASE44_WEBHOOK_SECRET");
+const ZIP_WEBHOOK_SECRET = Deno.env.get("ZIP_WEBHOOK_SECRET");
+const BASE44_WEBHOOK_URL = Deno.env.get("BASE44_WEBHOOK_URL");
+
+async function notifyProgress(job_id, phase, upload_mbps) {
+  if (!BASE44_WEBHOOK_URL) return;
+  try {
+    await fetch(BASE44_WEBHOOK_URL, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": \`Bearer \${ZIP_WEBHOOK_SECRET}\`
+      },
+      body: JSON.stringify({ job_id, phase, upload_mbps })
+    });
+  } catch (e) {
+    console.error("Webhook failed:", e.message);
+  }
+}
 
 async function sha256Hex(data) {
   const buf = typeof data === "string" ? new TextEncoder().encode(data) : data;
@@ -402,11 +420,11 @@ function parseCSV(text) {
   if (lines.length < 2) return [];
   const headers = lines[0].split(",").map(h => h.trim().replace(/^"|"$/g, ""));
   return lines.slice(1).map(line => {
-    const values = [], inQuotes = {};
-    let current = "", inQuotes2 = false;
+    const values = [];
+    let current = "", inQuotes = false;
     for (let i = 0; i < line.length; i++) {
-      if (line[i] === '"') { inQuotes2 = !inQuotes2; }
-      else if (line[i] === "," && !inQuotes2) { values.push(current.trim()); current = ""; }
+      if (line[i] === '"') { inQuotes = !inQuotes; }
+      else if (line[i] === "," && !inQuotes) { values.push(current.trim()); current = ""; }
       else { current += line[i]; }
     }
     values.push(current.trim());
@@ -430,6 +448,7 @@ Deno.serve(async (req) => {
     if (!job_id || !file_url) return new Response(JSON.stringify({ error: "Missing job_id or file_url" }), { status: 400 });
 
     // Download ZIP
+    await notifyProgress(job_id, "ZIP letöltése és kicsomagolása", null);
     const zipRes = await fetch(file_url);
     if (!zipRes.ok) throw new Error(\`Failed to download ZIP: \${zipRes.status}\`);
     const zipBuffer = new Uint8Array(await zipRes.arrayBuffer());
@@ -459,14 +478,19 @@ Deno.serve(async (req) => {
     const catalogNo = getCol(firstRow, "Catalog No.", "Catalog No", "catalog_no") || "unknown";
 
     // Upload cover
+    await notifyProgress(job_id, "Borítókép feltöltése (MinIO)", null);
     let coverUrl = null;
     if (coverFile) {
       coverUrl = await uploadToMinio(coverFile, \`covers/\${catalogNo}.\${coverExt}\`, \`image/\${coverExt === "png" ? "png" : "jpeg"}\`);
     }
 
-    // Process tracks
+    // Process tracks with progress updates
+    await notifyProgress(job_id, "WAV fájlok feltöltése (MinIO)", null);
     const tracks = [];
-    for (const row of rows) {
+    let totalUploadBytes = 0, totalUploadMs = 0;
+
+    for (let idx = 0; idx < rows.length; idx++) {
+      const row = rows[idx];
       const title = getCol(row, "Original Title", "original_title");
       const catalog = getCol(row, "Catalog No.", "Catalog No", "catalog_no");
       if (!title || !catalog) continue;
@@ -476,7 +500,16 @@ Deno.serve(async (req) => {
       let wavUrl = null;
 
       if (wavData) {
+        const t0 = Date.now();
         wavUrl = await uploadToMinio(wavData, \`wav/\${isrc}.wav\`, "audio/wav");
+        totalUploadMs += Date.now() - t0;
+        totalUploadBytes += wavData.byteLength;
+
+        const measuredMbps = totalUploadMs > 0
+          ? parseFloat(((totalUploadBytes * 8 / 1e6) / (totalUploadMs / 1000)).toFixed(2))
+          : null;
+        
+        await notifyProgress(job_id, \`WAV fájlok feltöltése (MinIO) — \${idx + 1}/\${rows.length}\`, measuredMbps);
       }
 
       tracks.push({
@@ -506,7 +539,11 @@ Deno.serve(async (req) => {
       if (objectKey) await deleteFromMinio(objectKey);
     } catch (_) {}
 
-    return new Response(JSON.stringify({ success: true, tracks, count: tracks.length }), {
+    const measuredMbps = totalUploadMs > 0
+      ? parseFloat(((totalUploadBytes * 8 / 1e6) / (totalUploadMs / 1000)).toFixed(2))
+      : null;
+
+    return new Response(JSON.stringify({ success: true, tracks, count: tracks.length, upload_mbps: measuredMbps }), {
       headers: { "Content-Type": "application/json" }
     });
   } catch (error) {
