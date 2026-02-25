@@ -20,8 +20,15 @@ export default function Settings() {
   const [turnaroundInput, setTurnaroundInput] = useState("");
   const [resetConfirm, setResetConfirm] = useState(false);
   const [isResetting, setIsResetting] = useState(false);
+  const [showSupabaseCode, setShowSupabaseCode] = useStateLocal(false);
+  const [user, setUser] = useStateLocal(null);
+  const [copied, setCopied] = useStateLocal(false);
   const queryClient = useQueryClient();
   const { quota, updateQuota, isSaving } = useMonthlyQuota();
+
+  useEffect(() => {
+    base44.auth.me().then(u => setUser(u)).catch(() => {});
+  }, []);
 
   const { data: appConfigs = [] } = useQuery({
     queryKey: ["appConfigs"],
