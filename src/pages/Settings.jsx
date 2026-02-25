@@ -336,7 +336,8 @@ const MINIO_ACCESS_KEY = Deno.env.get("MINIO_ACCESS_KEY");
 const MINIO_SECRET_KEY = Deno.env.get("MINIO_SECRET_KEY");
 const MINIO_BUCKET = Deno.env.get("MINIO_BUCKET_NAME");
 const ZIP_WEBHOOK_SECRET = Deno.env.get("ZIP_WEBHOOK_SECRET");
-const BASE44_WEBHOOK_URL = Deno.env.get("BASE44_WEBHOOK_URL");
+const BASE44_WEBHOOK_URL = "https://kessey-release-flow.base44.app/api/functions/updateZipJobProgress";
+const BASE44_API_KEY = "cc558a9b70f341909b70dcb9fb1a03a6";
 
 async function notifyProgress(job_id, phase, upload_mbps) {
   if (!BASE44_WEBHOOK_URL) return;
