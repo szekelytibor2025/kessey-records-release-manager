@@ -153,12 +153,24 @@ export default function Upload() {
       {/* Preview */}
       {parsedData.length > 0 && (
         <Card className="bg-slate-900/40 border-slate-800/50 overflow-hidden">
-          <div className="p-5 border-b border-slate-800/50 flex items-center justify-between">
+          <div className="p-5 border-b border-slate-800/50 flex items-center justify-between flex-wrap gap-3">
             <div className="flex items-center gap-3">
               <CheckCircle2 className="w-5 h-5 text-emerald-400" />
               <div>
                 <p className="text-white font-medium text-sm">{fileName}</p>
-                <p className="text-slate-500 text-xs">{parsedData.length} szám beolvasva</p>
+                <div className="flex items-center gap-2 mt-0.5">
+                  <p className="text-slate-500 text-xs">{parsedData.length} szám beolvasva</p>
+                  {dupRows.length > 0 && (
+                    <Badge className="bg-red-500/15 text-red-400 border-red-500/20 text-xs">
+                      {dupRows.length} duplikált – kizárva
+                    </Badge>
+                  )}
+                  {newRows.length > 0 && (
+                    <Badge className="bg-emerald-500/15 text-emerald-400 border-emerald-500/20 text-xs">
+                      {newRows.length} új
+                    </Badge>
+                  )}
+                </div>
               </div>
             </div>
             <div className="flex gap-2">
@@ -173,13 +185,13 @@ export default function Upload() {
               <Button
                 size="sm"
                 onClick={() => importMutation.mutate()}
-                disabled={importMutation.isPending}
+                disabled={importMutation.isPending || newRows.length === 0}
                 className="bg-amber-500 hover:bg-amber-600 text-black font-medium"
               >
                 {importMutation.isPending ? (
                   <><Loader2 className="w-4 h-4 mr-1 animate-spin" /> Importálás...</>
                 ) : (
-                  <><UploadIcon className="w-4 h-4 mr-1" /> Importálás</>
+                  <><UploadIcon className="w-4 h-4 mr-1" /> {newRows.length} szám importálása</>
                 )}
               </Button>
             </div>
@@ -191,29 +203,40 @@ export default function Upload() {
                 <TableRow className="border-slate-800/50 hover:bg-transparent">
                   <TableHead className="text-slate-400 text-xs">#</TableHead>
                   <TableHead className="text-slate-400 text-xs">Cím</TableHead>
-                  <TableHead className="text-slate-400 text-xs">Katalógus sz.</TableHead>
+                  <TableHead className="text-slate-400 text-xs">Katalógusszám</TableHead>
                   <TableHead className="text-slate-400 text-xs">ISRC</TableHead>
                   <TableHead className="text-slate-400 text-xs">Műfaj</TableHead>
                   <TableHead className="text-slate-400 text-xs">Kiadás</TableHead>
+                  <TableHead className="text-slate-400 text-xs">Státusz</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {parsedData.map((row, idx) => (
-                  <TableRow key={idx} className="border-slate-800/30 hover:bg-slate-800/20">
-                    <TableCell className="text-slate-600 text-xs">{idx + 1}</TableCell>
-                    <TableCell className="text-white text-sm font-medium max-w-[200px] truncate">
-                      {row["Original Title"]}
-                    </TableCell>
-                    <TableCell>
-                      <span className="font-mono text-amber-400/80 text-xs bg-amber-400/5 px-2 py-0.5 rounded">
-                        {row["Catalog No."]}
-                      </span>
-                    </TableCell>
-                    <TableCell className="text-slate-500 font-mono text-xs">{row["ISRC"]}</TableCell>
-                    <TableCell className="text-slate-400 text-xs">{row["Genre"]}</TableCell>
-                    <TableCell className="text-slate-400 text-xs">{row["Release Date"]}</TableCell>
-                  </TableRow>
-                ))}
+                {parsedData.map((row, idx) => {
+                  const dup = isDuplicate(row);
+                  return (
+                    <TableRow key={idx} className={`border-slate-800/30 ${dup ? "opacity-40" : "hover:bg-slate-800/20"}`}>
+                      <TableCell className="text-slate-600 text-xs">{idx + 1}</TableCell>
+                      <TableCell className={`text-sm font-medium max-w-[200px] truncate ${dup ? "text-slate-500 line-through" : "text-white"}`}>
+                        {row["Original Title"]}
+                      </TableCell>
+                      <TableCell>
+                        <span className={`font-mono text-xs px-2 py-0.5 rounded ${dup ? "bg-red-500/10 text-red-400/60" : "bg-amber-400/5 text-amber-400/80"}`}>
+                          {row["Catalog No."]}
+                        </span>
+                      </TableCell>
+                      <TableCell className="text-slate-500 font-mono text-xs">{row["ISRC"]}</TableCell>
+                      <TableCell className="text-slate-400 text-xs">{row["Genre"]}</TableCell>
+                      <TableCell className="text-slate-400 text-xs">{row["Release Date"]}</TableCell>
+                      <TableCell>
+                        {dup ? (
+                          <Badge className="bg-red-500/15 text-red-400 border-red-500/20 text-xs">Duplikált</Badge>
+                        ) : (
+                          <Badge className="bg-emerald-500/15 text-emerald-400 border-emerald-500/20 text-xs">Új</Badge>
+                        )}
+                      </TableCell>
+                    </TableRow>
+                  );
+                })}
               </TableBody>
             </Table>
           </div>
