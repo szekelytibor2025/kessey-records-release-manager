@@ -342,6 +342,26 @@ ${data.files['README.md']}
         )}
       </Card>
 
+      {/* Worker Deploy */}
+      <Card className="bg-blue-500/5 border-blue-500/20 p-6">
+        <h2 className="text-white font-semibold mb-2 flex items-center gap-2">
+          <Code className="w-4 h-4 text-blue-400" />
+          ZIP Worker Docker Deploy
+        </h2>
+        <p className="text-slate-400 text-sm mb-4">Töltsd le és telepítsd a dedikált ZIP feldolgozó workert egy VPS-en, hogy elkerüld a HTTP timeout hibákat nagyméretű fájlok feldolgozása közben.</p>
+        <Button
+          onClick={handleDownloadWorker}
+          disabled={downloadingWorker}
+          className="bg-blue-600 hover:bg-blue-700 text-white font-medium"
+        >
+          {downloadingWorker ? <Loader2 className="w-4 h-4 mr-1 animate-spin" /> : <Download className="w-4 h-4 mr-1" />}
+          Worker kód letöltése
+        </Button>
+        <p className="text-xs text-slate-600 mt-3">
+          <strong>Tartalmaz:</strong> Dockerfile, docker-compose.yml, .env template, README
+        </p>
+      </Card>
+
       {/* Info */}
       <Card className="bg-amber-500/5 border-amber-500/20 p-5">
         <div className="flex gap-3">
