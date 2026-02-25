@@ -1,5 +1,7 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.6';
 
+const SUPABASE_FUNCTION_URL = 'https://zagrlgyitjkkkqikpyfg.supabase.co/functions/v1/process-zip-job';
+
 Deno.serve(async (req) => {
   let job_id = null;
   let base44Client = null;
@@ -22,11 +24,27 @@ Deno.serve(async (req) => {
     // Mark as processing
     await base44Client.asServiceRole.entities.ZipJob.update(job_id, {
       status: 'processing',
-      phase: 'ZIP feldolgozás kezdődött',
+      phase: 'ZIP letöltése és kicsomagolása',
       started_at: new Date().toISOString()
     });
 
-    return Response.json({ success: true, message: 'Processing started - Supabase will handle the rest via webhook' });
+    // Call Supabase Edge Function to process the ZIP
+    const supabaseRes = await fetch(SUPABASE_FUNCTION_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        job_id,
+        file_url: job.file_url,
+        file_size_mb: job.file_size_mb
+      })
+    });
+
+    if (!supabaseRes.ok) {
+      const errorText = await supabaseRes.text();
+      throw new Error(`Supabase function failed: ${supabaseRes.status} ${errorText}`);
+    }
+
+    return Response.json({ success: true, message: 'Processing sent to Supabase' });
   } catch (error) {
     try {
       if (base44Client && job_id) {
