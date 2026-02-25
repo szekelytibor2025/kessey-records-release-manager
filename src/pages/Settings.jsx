@@ -15,6 +15,7 @@ export default function Settings() {
   const [keyword, setKeyword] = useState("");
   const [priority, setPriority] = useState([5]);
   const [quotaInput, setQuotaInput] = useState(null);
+  const [turnaroundInput, setTurnaroundInput] = useState("");
   const queryClient = useQueryClient();
   const { quota, updateQuota, isSaving } = useMonthlyQuota();
 
