@@ -3,12 +3,14 @@ import { Link, useLocation } from "react-router-dom";
 import { createPageUrl } from "@/utils";
 import { 
   Music2, Upload, CalendarDays, Calculator, Settings, 
-  Menu, X, ChevronRight 
+  Menu, X, ChevronRight, Hash, Tag
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const navItems = [
   { name: "Katalógus", page: "Catalog", icon: Music2 },
+  { name: "Katalógusszámok", page: "CatalogNumbers", icon: Hash },
+  { name: "Szabad számok", page: "FreeCatalogNumbers", icon: Tag },
   { name: "Feltöltés", page: "Upload", icon: Upload },
   { name: "Ütemező", page: "Scheduler", icon: CalendarDays },
   { name: "Díjkalkuláció", page: "FeePlanning", icon: Calculator },
