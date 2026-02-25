@@ -47,8 +47,24 @@
  *
  * The mainPage value must match a key in the PAGES object exactly.
  */
+import Catalog from './pages/Catalog';
+import Upload from './pages/Upload';
+import Settings from './pages/Settings';
+import Scheduler from './pages/Scheduler';
+import FeePlanning from './pages/FeePlanning';
+import __Layout from './Layout.jsx';
 
-export const pagesConfig = {
-	Pages: {}
+
+export const PAGES = {
+    "Catalog": Catalog,
+    "Upload": Upload,
+    "Settings": Settings,
+    "Scheduler": Scheduler,
+    "FeePlanning": FeePlanning,
 }
 
+export const pagesConfig = {
+    mainPage: "Catalog",
+    Pages: PAGES,
+    Layout: __Layout,
+};
