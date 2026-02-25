@@ -181,8 +181,21 @@ export default function ZipQueue() {
     const files = Array.from(fileList).filter(f => f.name.endsWith('.zip'));
     for (const file of files) {
       try {
+        // Convert file to base64
+        const base64 = await new Promise((resolve, reject) => {
+          const reader = new FileReader();
+          reader.onload = () => {
+            // Remove the data URL prefix (e.g. "data:application/zip;base64,")
+            const result = reader.result;
+            const b64 = result.includes(',') ? result.split(',')[1] : result;
+            resolve(b64);
+          };
+          reader.onerror = reject;
+          reader.readAsDataURL(file);
+        });
+
         // Upload to Base44 storage
-        const { file_url } = await base44.integrations.Core.UploadFile({ file });
+        const { file_url } = await base44.integrations.Core.UploadFile({ file: base64 });
         await base44.entities.ZipJob.create({
           file_name: file.name,
           file_url,
@@ -191,6 +204,7 @@ export default function ZipQueue() {
         });
       } catch (err) {
         console.error('Upload failed for', file.name, err);
+        alert(`Hiba a feltöltés során: ${file.name}\n${err.message}`);
       }
     }
     queryClient.invalidateQueries({ queryKey: ['zip-jobs'] });
