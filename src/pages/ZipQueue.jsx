@@ -166,13 +166,40 @@ export default function ZipQueue() {
   // Processing is now triggered automatically via entity automation when a ZipJob is created
 
   const [uploading, setUploading] = useState(false);
+  const [uploadProgress, setUploadProgress] = useState({}); // { fileName: 0-100 }
+
+  const uploadFileToMinio = (presignedUrl, file, onProgress) => {
+    return new Promise((resolve, reject) => {
+      const xhr = new XMLHttpRequest();
+      xhr.open('PUT', presignedUrl);
+      xhr.upload.onprogress = (e) => {
+        if (e.lengthComputable) onProgress(Math.round((e.loaded / e.total) * 100));
+      };
+      xhr.onload = () => xhr.status < 300 ? resolve() : reject(new Error(`Upload failed: ${xhr.status}`));
+      xhr.onerror = () => reject(new Error('Network error during upload'));
+      xhr.send(file);
+    });
+  };
 
   const handleFiles = async (fileList) => {
     const files = Array.from(fileList).filter(f => f.name.endsWith('.zip'));
     if (files.length === 0) return;
     setUploading(true);
+    setUploadProgress({});
+
     for (const file of files) {
-      const { file_url } = await base44.integrations.Core.UploadFile({ file });
+      setUploadProgress(prev => ({ ...prev, [file.name]: 0 }));
+
+      // Get presigned PUT URL from backend
+      const { data } = await base44.functions.invoke('getZipUploadUrl', { file_name: file.name });
+      const { presigned_url, file_url } = data;
+
+      // Upload directly to MinIO with progress tracking
+      await uploadFileToMinio(presigned_url, file, (pct) => {
+        setUploadProgress(prev => ({ ...prev, [file.name]: pct }));
+      });
+
+      // Register job in database
       await base44.entities.ZipJob.create({
         file_name: file.name,
         file_url,
@@ -181,7 +208,9 @@ export default function ZipQueue() {
       });
       await queryClient.invalidateQueries({ queryKey: ['zip-jobs'] });
     }
+
     setUploading(false);
+    setUploadProgress({});
   };
 
   const handleDrop = (e) => {
