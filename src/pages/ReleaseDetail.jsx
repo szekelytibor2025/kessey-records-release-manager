@@ -102,13 +102,28 @@ export default function ReleaseDetail() {
     a.remove();
   };
 
-  let composers = [];
-  try {
-    const parsed = JSON.parse(release.composer || '[]');
-    composers = Array.isArray(parsed) ? parsed : [parsed];
-  } catch {
-    if (release.composer) composers = [release.composer];
-  }
+  const parseComposer = (raw) => {
+    if (!raw) return [];
+    // Handle array-like: [{firstname:X,lastname:Y},...] or JSON or plain string
+    try {
+      // Try standard JSON first
+      const parsed = JSON.parse(raw);
+      const arr = Array.isArray(parsed) ? parsed : [parsed];
+      return arr.map(c => typeof c === 'object' && c !== null
+        ? [c.firstname, c.lastname].filter(Boolean).join(' ')
+        : String(c)
+      );
+    } catch {
+      // Try unquoted key format: {firstname:X,lastname:Y}
+      const matches = [...raw.matchAll(/firstname:([^,}]+)/g)];
+      const lastnames = [...raw.matchAll(/lastname:([^,}]+)/g)];
+      if (matches.length > 0) {
+        return matches.map((m, i) => [m[1].trim(), lastnames[i]?.[1]?.trim()].filter(Boolean).join(' '));
+      }
+      return [raw];
+    }
+  };
+  const composers = parseComposer(release.composer);
 
   if (isLoading) return (
     <div className="flex items-center justify-center h-64">
