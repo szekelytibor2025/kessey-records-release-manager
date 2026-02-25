@@ -99,22 +99,30 @@ function parseCSV(text) {
   });
 }
 
+// Helper: find a row value by multiple possible column name variants
+function getCol(row, ...variants) {
+  for (const v of variants) {
+    if (row[v] !== undefined && row[v] !== '') return row[v];
+  }
+  return '';
+}
+
 function mapCSVToTrack(row) {
-  const colMap = {
-    'Original Title': 'original_title',
-    'Genre': 'genre',
-    'Version Type': 'version_type',
-    'ISRC': 'isrc',
-    'Composer': 'composer',
-    'Product Title': 'product_title',
-    'Catalog No': 'catalog_no',
-    'Label': 'label',
-    'UPC': 'upc',
-    'Release Date': 'release_date',
+  const track = {
+    original_title: getCol(row, 'Original Title', 'Original Title.', 'original_title'),
+    genre:          getCol(row, 'Genre', 'genre'),
+    version_type:   getCol(row, 'Version Type', 'Version Type.', 'version_type'),
+    isrc:           getCol(row, 'ISRC', 'isrc'),
+    composer:       getCol(row, 'Composer', 'composer'),
+    product_title:  getCol(row, 'Product Title', 'Product Title.', 'product_title'),
+    catalog_no:     getCol(row, 'Catalog No.', 'Catalog No', 'CatalogNo', 'catalog_no', 'Catalog no.', 'Catalog no'),
+    label:          getCol(row, 'Label', 'label'),
+    upc:            getCol(row, 'UPC', 'upc'),
+    release_date:   getCol(row, 'Release Date', 'Release Date.', 'release_date'),
   };
-  const track = {};
-  for (const [csvCol, entityField] of Object.entries(colMap)) {
-    if (row[csvCol] !== undefined) track[entityField] = row[csvCol];
+  // Remove empty fields
+  for (const k of Object.keys(track)) {
+    if (track[k] === '') delete track[k];
   }
   track.migration_status = 'pending';
   track.zip_processed = true;
