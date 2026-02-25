@@ -18,6 +18,7 @@ const navItems = [
   { name: "Ütemező", page: "Scheduler", icon: CalendarDays },
   { name: "Díjkalkuláció", page: "FeePlanning", icon: Calculator },
   { name: "Beállítások", page: "Settings", icon: Settings },
+  { name: "Supabase Telepítés", page: "SupabaseSetup", icon: Terminal },
 ];
 
 export default function Layout({ children, currentPageName }) {
