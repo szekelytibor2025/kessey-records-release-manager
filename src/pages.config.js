@@ -55,6 +55,7 @@ import FeePlanning from './pages/FeePlanning';
 import CatalogNumbers from './pages/CatalogNumbers';
 import FreeCatalogNumbers from './pages/FreeCatalogNumbers';
 import ZipUpload from './pages/ZipUpload';
+import DataExchange from './pages/DataExchange';
 import __Layout from './Layout.jsx';
 
 
@@ -67,6 +68,7 @@ export const PAGES = {
     "CatalogNumbers": CatalogNumbers,
     "FreeCatalogNumbers": FreeCatalogNumbers,
     "ZipUpload": ZipUpload,
+    "DataExchange": DataExchange,
 }
 
 export const pagesConfig = {
