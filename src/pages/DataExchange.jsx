@@ -51,70 +51,15 @@ export default function DataExchange() {
     return Object.values(groups).sort((a, b) => a.catalog_no.localeCompare(b.catalog_no));
   }, [tracks]);
 
-  const lockMutation = useMutation({
-    mutationFn: async (catalog_no) => {
-      return base44.entities.LockedRelease.create({
-        catalog_no,
-        locked_by: currentUser.email,
-        locked_by_name: currentUser.full_name || currentUser.email,
-        locked_at: new Date().toISOString(),
-      });
-    },
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['locked-releases'] }),
-  });
-
-  const unlockMutation = useMutation({
-    mutationFn: async (catalog_no) => {
-      const lock = locks.find(l => l.catalog_no === catalog_no && l.locked_by === currentUser?.email);
-      if (lock) await base44.entities.LockedRelease.delete(lock.id);
-    },
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['locked-releases'] }),
-  });
-
-  const scheduleMutation = useMutation({
-    mutationFn: async (catalog_no) => {
-      const releaseTracks = tracks.filter(t => t.catalog_no === catalog_no);
-      await Promise.all(releaseTracks.map(t =>
-        base44.entities.Track.update(t.id, { migration_status: 'scheduled' })
-      ));
-    },
-    onSuccess: async (_, catalog_no) => {
-      await unlockMutation.mutateAsync(catalog_no);
-      setLockedRelease(null);
-      queryClient.invalidateQueries({ queryKey: ['tracks-exchange'] });
-    },
-  });
-
-  const handleOpen = async (catalog_no) => {
+  const handleOpen = (catalog_no) => {
     if (!currentUser) return;
-    // Check if another user has it locked
     const existingLock = locks.find(l => l.catalog_no === catalog_no && l.locked_by !== currentUser.email);
     if (existingLock) {
       setBusyInfo({ catalog_no, locked_by_name: existingLock.locked_by_name || existingLock.locked_by });
       return;
     }
-    // Unlock previous if any
-    if (lockedRelease && lockedRelease !== catalog_no) {
-      await unlockMutation.mutateAsync(lockedRelease);
-    }
-    await lockMutation.mutateAsync(catalog_no);
-    setLockedRelease(catalog_no);
+    navigate(createPageUrl('ReleaseDetail') + `?catalog_no=${catalog_no}`);
   };
-
-  const handleClose = async (catalog_no) => {
-    await unlockMutation.mutateAsync(catalog_no);
-    setLockedRelease(null);
-  };
-
-  // Cleanup lock on unmount
-  useEffect(() => {
-    return () => {
-      if (lockedRelease && currentUser) {
-        base44.entities.LockedRelease.filter({ catalog_no: lockedRelease, locked_by: currentUser.email })
-          .then(found => { if (found[0]) base44.entities.LockedRelease.delete(found[0].id); });
-      }
-    };
-  }, [lockedRelease, currentUser]);
 
   if (tracksLoading) return (
     <div className="flex items-center justify-center h-64">
