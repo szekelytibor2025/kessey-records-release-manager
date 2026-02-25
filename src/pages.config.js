@@ -56,8 +56,8 @@ import ReleaseDetail from './pages/ReleaseDetail';
 import Scheduler from './pages/Scheduler';
 import Settings from './pages/Settings';
 import Upload from './pages/Upload';
-import ZipUpload from './pages/ZipUpload';
 import ZipQueue from './pages/ZipQueue';
+import ZipUpload from './pages/ZipUpload';
 import __Layout from './Layout.jsx';
 
 
@@ -71,8 +71,8 @@ export const PAGES = {
     "Scheduler": Scheduler,
     "Settings": Settings,
     "Upload": Upload,
-    "ZipUpload": ZipUpload,
     "ZipQueue": ZipQueue,
+    "ZipUpload": ZipUpload,
 }
 
 export const pagesConfig = {
