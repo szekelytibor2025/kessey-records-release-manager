@@ -12,9 +12,9 @@ import { Lock, ChevronRight } from "lucide-react";
 
 export default function DataExchange() {
   const queryClient = useQueryClient();
+  const navigate = useNavigate();
   const [currentUser, setCurrentUser] = useState(null);
-  const [lockedRelease, setLockedRelease] = useState(null); // which catalog_no is open by THIS user
-  const [busyInfo, setBusyInfo] = useState(null); // { catalog_no, locked_by_name }
+  const [busyInfo, setBusyInfo] = useState(null);
 
   useEffect(() => {
     base44.auth.me().then(setCurrentUser);
