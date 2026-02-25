@@ -208,6 +208,6 @@ Deno.serve(async (req) => {
 
     return Response.json({ success: true, created, skipped, errors, cover_url: coverUrl });
   } catch (error) {
-    return Response.json({ error: error.message }, { status: 500 });
+    return Response.json({ error: error.message, stack: error.stack }, { status: 500 });
   }
 });
