@@ -1,7 +1,8 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.6';
 import * as fflate from 'npm:fflate@0.8.2';
 
-const MINIO_ENDPOINT = Deno.env.get('MINIO_ENDPOINT');
+let MINIO_ENDPOINT = Deno.env.get('MINIO_ENDPOINT') || '';
+if (MINIO_ENDPOINT && !MINIO_ENDPOINT.startsWith('http')) MINIO_ENDPOINT = 'https://' + MINIO_ENDPOINT;
 const MINIO_ACCESS_KEY = Deno.env.get('MINIO_ACCESS_KEY');
 const MINIO_SECRET_KEY = Deno.env.get('MINIO_SECRET_KEY');
 const MINIO_BUCKET = Deno.env.get('MINIO_BUCKET_NAME');
