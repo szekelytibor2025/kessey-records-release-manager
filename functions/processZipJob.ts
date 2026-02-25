@@ -108,12 +108,14 @@ function mapCSVToTrack(row) {
 }
 
 Deno.serve(async (req) => {
+  let job_id = null;
   try {
     const base44 = createClientFromRequest(req);
     const user = await base44.auth.me();
     if (!user) return Response.json({ error: 'Unauthorized' }, { status: 401 });
 
-    const { job_id } = await req.json();
+    const body = await req.json();
+    job_id = body.job_id;
     if (!job_id) return Response.json({ error: 'job_id required' }, { status: 400 });
 
     // Load job
