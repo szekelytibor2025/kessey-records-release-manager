@@ -5,9 +5,17 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Upload, FileArchive, CheckCircle2, AlertCircle, Loader2, X, Music, Image, Database, Archive } from "lucide-react";
 import { cn } from "@/lib/utils";
 
-// Becsült feldolgozási idő másodpercben, fájlméret (MB) alapján
-// 27MB ≈ ~140s a tapasztalat alapján → ~5.2s/MB
-const SECONDS_PER_MB = 5.2;
+// Becsült feldolgozási idő számítása:
+// - WAV tartalom ≈ fájlméret 95%-a
+// - MinIO sávszélesség: ~2.3 Mbit/s
+// - Fix overhead (kicsomagolás, CSV parse, DB): ~10s
+const MINIO_MBIT_PER_SEC = 2.3;
+const WAV_RATIO = 0.95;
+function estimateTotalSeconds(fileSizeMB) {
+  const wavMB = fileSizeMB * WAV_RATIO;
+  const uploadSec = (wavMB * 8) / MINIO_MBIT_PER_SEC;
+  return Math.round(uploadSec + 10);
+}
 
 const PHASES = [
   { id: 'reading',    label: 'Fájl beolvasása és kódolása',     icon: Archive,  weight: 0.05 },
