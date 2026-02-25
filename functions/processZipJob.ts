@@ -281,6 +281,14 @@ Deno.serve(async (req) => {
       upload_mbps: measuredMbps
     });
 
+    // Auto-process next queued job
+    const nextJob = await base44Client.asServiceRole.entities.ZipJob.filter({ status: 'queued' }, 'created_date', 1);
+    if (nextJob.length > 0) {
+      try {
+        await base44Client.asServiceRole.functions.invoke('processZipJob', { job_id: nextJob[0].id });
+      } catch (_) {}
+    }
+
     return Response.json({ success: true, created, skipped });
   } catch (error) {
     try {
