@@ -183,9 +183,9 @@ Deno.serve(async (req) => {
     const rows = parseCSV(csvData);
     if (rows.length === 0) return Response.json({ error: 'CSV is empty' }, { status: 400 });
 
-    // Determine catalog_no for cover (from first row) — try all known column name variants
+    // Determine catalog_no for cover (from first row)
     const firstRow = rows[0];
-    const catalogNo = firstRow['Catalog No'] || firstRow['Catalog no'] || firstRow['catalog_no'] || firstRow['CatalogNo'] || firstRow['catalog no'] || Object.values(firstRow).find(v => /^KR[A-Z]{2}\d+$/i.test(v)) || 'unknown';
+    const catalogNo = getCol(firstRow, 'Catalog No.', 'Catalog No', 'CatalogNo', 'catalog_no', 'Catalog no.', 'Catalog no') || 'unknown';
     console.log('[DEBUG] catalogNo:', catalogNo, '| CSV headers:', Object.keys(firstRow));
 
     // Upload cover if found
