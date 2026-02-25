@@ -37,11 +37,14 @@ export default function ZipUpload() {
     setError(null);
     setResult(null);
 
-    // Upload the ZIP to Base44 storage first to get a URL
-    const { file_url } = await base44.integrations.Core.UploadFile({ file });
+    // Read ZIP as base64 and send directly to backend
+    const arrayBuffer = await file.arrayBuffer();
+    const bytes = new Uint8Array(arrayBuffer);
+    let binary = '';
+    for (let i = 0; i < bytes.byteLength; i++) binary += String.fromCharCode(bytes[i]);
+    const base64 = btoa(binary);
 
-    // Then process it on the backend
-    const response = await base44.functions.invoke('processZip', { zip_url: file_url });
+    const response = await base44.functions.invoke('processZip', { zip_base64: base64 });
     const data = response.data;
 
     if (data.error) {
