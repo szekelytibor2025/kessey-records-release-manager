@@ -1,9 +1,29 @@
-import React, { useState, useRef } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import { base44 } from "@/api/base44Client";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { Upload, FileArchive, CheckCircle2, AlertCircle, Loader2, X } from "lucide-react";
+import { Upload, FileArchive, CheckCircle2, AlertCircle, Loader2, X, Music, Image, Database, Archive } from "lucide-react";
 import { cn } from "@/lib/utils";
+
+// Becsült feldolgozási idő másodpercben, fájlméret (MB) alapján
+// 27MB ≈ ~140s a tapasztalat alapján → ~5.2s/MB
+const SECONDS_PER_MB = 5.2;
+
+const PHASES = [
+  { id: 'reading',    label: 'Fájl beolvasása és kódolása',     icon: Archive,  weight: 0.05 },
+  { id: 'uploading',  label: 'Feltöltés a szerverre',            icon: Upload,   weight: 0.10 },
+  { id: 'unzipping',  label: 'ZIP kicsomagolása',                icon: Archive,  weight: 0.05 },
+  { id: 'cover',      label: 'Borítókép feltöltése (MinIO)',      icon: Image,    weight: 0.05 },
+  { id: 'wav',        label: 'WAV fájlok feltöltése (MinIO)',     icon: Music,    weight: 0.55 },
+  { id: 'db',         label: 'Zeneszámok mentése az adatbázisba', icon: Database, weight: 0.20 },
+];
+
+function estimatePhaseEnd(fileSizeMB, phaseIndex) {
+  const totalSec = fileSizeMB * SECONDS_PER_MB;
+  let elapsed = 0;
+  for (let i = 0; i <= phaseIndex; i++) elapsed += PHASES[i].weight * totalSec;
+  return elapsed;
+}
 
 export default function ZipUpload() {
   const [file, setFile] = useState(null);
@@ -11,14 +31,38 @@ export default function ZipUpload() {
   const [uploading, setUploading] = useState(false);
   const [result, setResult] = useState(null);
   const [error, setError] = useState(null);
+  const [phaseIndex, setPhaseIndex] = useState(0);
+  const [remaining, setRemaining] = useState(null);
   const fileRef = useRef();
+  const timerRef = useRef(null);
+  const startRef = useRef(null);
+  const totalEstRef = useRef(0);
+
+  // Visszaszámláló ticker
+  useEffect(() => {
+    if (!uploading) {
+      clearInterval(timerRef.current);
+      return;
+    }
+    timerRef.current = setInterval(() => {
+      const elapsed = (Date.now() - startRef.current) / 1000;
+      const left = Math.max(0, Math.round(totalEstRef.current - elapsed));
+      setRemaining(left);
+
+      // Fázis előrehaladás becslése az eltelt idő alapján
+      const fileSizeMB = file ? file.size / 1024 / 1024 : 10;
+      let newPhase = 0;
+      for (let i = PHASES.length - 1; i >= 0; i--) {
+        if (elapsed >= estimatePhaseEnd(fileSizeMB, i - 1)) { newPhase = i; break; }
+      }
+      setPhaseIndex(p => Math.max(p, newPhase));
+    }, 1000);
+    return () => clearInterval(timerRef.current);
+  }, [uploading, file]);
 
   const handleFile = (f) => {
     if (!f) return;
-    if (!f.name.endsWith('.zip')) {
-      setError('Csak .zip fájl tölthető fel!');
-      return;
-    }
+    if (!f.name.endsWith('.zip')) { setError('Csak .zip fájl tölthető fel!'); return; }
     setFile(f);
     setResult(null);
     setError(null);
@@ -27,24 +71,30 @@ export default function ZipUpload() {
   const handleDrop = (e) => {
     e.preventDefault();
     setDragging(false);
-    const f = e.dataTransfer.files[0];
-    handleFile(f);
+    handleFile(e.dataTransfer.files[0]);
   };
 
   const handleSubmit = async () => {
     if (!file) return;
+    const fileSizeMB = file.size / 1024 / 1024;
+    const totalEst = Math.round(fileSizeMB * SECONDS_PER_MB);
+    totalEstRef.current = totalEst;
+    startRef.current = Date.now();
     setUploading(true);
+    setPhaseIndex(0);
+    setRemaining(totalEst);
     setError(null);
     setResult(null);
 
     try {
-      // Read ZIP as base64 and send directly to backend
+      setPhaseIndex(0); // reading
       const arrayBuffer = await file.arrayBuffer();
       const bytes = new Uint8Array(arrayBuffer);
       let binary = '';
       for (let i = 0; i < bytes.byteLength; i++) binary += String.fromCharCode(bytes[i]);
       const base64 = btoa(binary);
 
+      setPhaseIndex(1); // uploading
       const response = await base44.functions.invoke('processZip', { zip_base64: base64 });
       const data = response.data;
 
@@ -63,6 +113,7 @@ export default function ZipUpload() {
       }
     }
     setUploading(false);
+    setRemaining(null);
   };
 
   return (
