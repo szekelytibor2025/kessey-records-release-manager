@@ -14,7 +14,9 @@ import { useMonthlyQuota } from "@/components/scheduler/useMonthlyQuota";
 export default function Settings() {
   const [keyword, setKeyword] = useState("");
   const [priority, setPriority] = useState([5]);
+  const [quotaInput, setQuotaInput] = useState(null);
   const queryClient = useQueryClient();
+  const { quota, updateQuota, isSaving } = useMonthlyQuota();
 
   const { data: rules = [], isLoading } = useQuery({
     queryKey: ["priorityRules"],
@@ -56,6 +58,41 @@ export default function Settings() {
         <h1 className="text-2xl font-bold text-white tracking-tight">Prioritás beállítások</h1>
         <p className="text-slate-500 text-sm mt-1">Globális prioritások kezelése kulcsszavak alapján</p>
       </div>
+
+      {/* Monthly quota */}
+      <Card className="bg-slate-900/40 border-slate-800/50 p-6">
+        <h2 className="text-white font-semibold mb-4 flex items-center gap-2">
+          <AlertCircle className="w-4 h-4 text-blue-400" />
+          Havi migrációs kvóta
+        </h2>
+        <div className="space-y-4">
+          <div>
+            <Label className="text-slate-400 text-xs uppercase tracking-wider">
+              Kiadások száma havonta: <span className="text-blue-400 font-bold text-sm">{quotaInput !== null ? quotaInput : quota}</span>
+            </Label>
+            <Slider
+              value={[quotaInput !== null ? quotaInput : quota]}
+              onValueChange={([v]) => setQuotaInput(v)}
+              min={1}
+              max={20}
+              step={1}
+              className="mt-3"
+            />
+            <div className="flex justify-between text-xs text-slate-600 mt-1">
+              <span>1</span>
+              <span>20</span>
+            </div>
+          </div>
+          <Button
+            onClick={() => { updateQuota(quotaInput !== null ? quotaInput : quota); setQuotaInput(null); toast.success("Kvóta frissítve!"); }}
+            disabled={isSaving || quotaInput === null}
+            className="bg-blue-500 hover:bg-blue-600 text-white font-medium"
+          >
+            {isSaving ? <Loader2 className="w-4 h-4 mr-1 animate-spin" /> : <Save className="w-4 h-4 mr-1" />}
+            Mentés
+          </Button>
+        </div>
+      </Card>
 
       {/* Add rule */}
       <Card className="bg-slate-900/40 border-slate-800/50 p-6">
