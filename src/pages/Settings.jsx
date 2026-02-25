@@ -284,6 +284,49 @@ export default function Settings() {
         </div>
       </Card>
 
+      {/* ZIP Processor Server */}
+      <Card className="bg-blue-500/5 border-blue-500/20 p-6">
+        <h2 className="text-white font-semibold mb-4 flex items-center gap-2">
+          <Server className="w-4 h-4 text-blue-400" />
+          ZIP feldolgozó szerver (Docker)
+        </h2>
+        <p className="text-slate-500 text-sm mb-4">
+          Letöltsd az összes szükséges fájlt a ZIP feldolgozás saját szerveren való futtatásához. Ideális nagyobb fájlok feldolgozásához, hogy elkerüld az Base44 timeout-okat.
+        </p>
+        <div className="space-y-3 mb-4 p-4 bg-slate-800/30 rounded-lg border border-slate-700/50">
+          <div className="text-sm text-slate-300">
+            <p className="font-medium text-white mb-2">Mit fog tartalmazni:</p>
+            <ul className="list-disc list-inside space-y-1 text-xs text-slate-400">
+              <li>Dockerfile - Docker konténer definíció</li>
+              <li>package.json - Node.js függőségek</li>
+              <li>index.js - ZIP feldolgozó szerver (Express)</li>
+              <li>.env.example - Konfigurációs sablon</li>
+              <li>README.md - Telepítési útmutató</li>
+            </ul>
+          </div>
+        </div>
+        <div className="space-y-3 mb-4 p-4 bg-slate-800/30 rounded-lg border border-slate-700/50">
+          <div className="text-sm text-slate-300">
+            <p className="font-medium text-white mb-2">Telepítési lépések:</p>
+            <ol className="list-decimal list-inside space-y-1 text-xs text-slate-400">
+              <li>Csomagold ki a ZIP fájlt</li>
+              <li>Másold az .env.example-t .env-be</li>
+              <li>Töltsd ki az .env fájlt a Base44 és MinIO adataiddal</li>
+              <li>Futtasd: <code className="text-slate-300 font-mono">docker build -t zip-processor .</code></li>
+              <li>Futtasd: <code className="text-slate-300 font-mono">docker run -d --env-file .env -p 3000:3000 zip-processor</code></li>
+            </ol>
+          </div>
+        </div>
+        <Button
+          onClick={handleDownloadProcessor}
+          disabled={downloadingProcessor}
+          className="bg-blue-600 hover:bg-blue-700 text-white font-medium"
+        >
+          {downloadingProcessor ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Download className="w-4 h-4 mr-2" />}
+          ZIP feldolgozó letöltése
+        </Button>
+      </Card>
+
       {/* Reset */}
       <Card className="bg-red-500/5 border-red-500/20 p-6">
         <h2 className="text-white font-semibold mb-1 flex items-center gap-2">
