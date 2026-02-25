@@ -85,7 +85,7 @@ export default function ZipUpload() {
   const handleSubmit = async () => {
     if (!file) return;
     const fileSizeMB = file.size / 1024 / 1024;
-    const totalEst = Math.round(fileSizeMB * SECONDS_PER_MB);
+    const totalEst = estimateTotalSeconds(fileSizeMB);
     totalEstRef.current = totalEst;
     startRef.current = Date.now();
     setUploading(true);
