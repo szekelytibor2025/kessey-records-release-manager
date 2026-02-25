@@ -3,7 +3,7 @@ import { Link, useLocation } from "react-router-dom";
 import { createPageUrl } from "@/utils";
 import { 
   Music2, Upload, CalendarDays, Calculator, Settings, 
-  Menu, X, ChevronRight, Hash, Tag
+  Menu, X, ChevronRight, Hash, Tag, FileArchive, ArrowLeftRight
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -12,6 +12,8 @@ const navItems = [
   { name: "Katalógusszámok", page: "CatalogNumbers", icon: Hash },
   { name: "Szabad számok", page: "FreeCatalogNumbers", icon: Tag },
   { name: "Feltöltés", page: "Upload", icon: Upload },
+  { name: "ZIP Feltöltés", page: "ZipUpload", icon: FileArchive },
+  { name: "Adatcsere", page: "DataExchange", icon: ArrowLeftRight },
   { name: "Ütemező", page: "Scheduler", icon: CalendarDays },
   { name: "Díjkalkuláció", page: "FeePlanning", icon: Calculator },
   { name: "Beállítások", page: "Settings", icon: Settings },
@@ -58,7 +60,7 @@ export default function Layout({ children, currentPageName }) {
           </div>
         </div>
 
-        <nav className="flex-1 p-4 space-y-1">
+        <nav className="flex-1 p-4 space-y-1 overflow-y-auto">
           {navItems.map(({ name, page, icon: Icon }) => {
             const isActive = currentPageName === page;
             return (
