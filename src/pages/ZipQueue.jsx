@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect, useMemo } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import { base44 } from "@/api/base44Client";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
@@ -49,25 +49,18 @@ function JobCard({ job, onDelete }) {
 
   useEffect(() => {
     if (job.status === 'processing' && job.started_at) {
-      setElapsed(Math.round((Date.now() - new Date(job.started_at).getTime()) / 1000));
       timerRef.current = setInterval(() => {
         setElapsed(Math.round((Date.now() - new Date(job.started_at).getTime()) / 1000));
-      }, 500); // Update more frequently for smoother countdown
+      }, 1000);
     }
     return () => clearInterval(timerRef.current);
   }, [job.status, job.started_at]);
 
-  const totalEst = useMemo(() => estimateTotalSeconds(job.file_size_mb, job.upload_mbps), [job.file_size_mb, job.upload_mbps]);
-  const remaining = useMemo(() => {
-    if (job.status !== 'processing') return null;
-    return Math.max(0, totalEst - elapsed);
-  }, [totalEst, elapsed, job.status]);
-
-  const progress = useMemo(() => {
-    if (job.status === 'processing' && totalEst > 0) return Math.min(99, Math.round((elapsed / totalEst) * 100));
-    if (job.status === 'done') return 100;
-    return 0;
-  }, [job.status, totalEst, elapsed]);
+  const totalEst = estimateTotalSeconds(job.file_size_mb, job.upload_mbps);
+  const remaining = job.status === 'processing' ? Math.max(0, totalEst - elapsed) : null;
+  const progress = job.status === 'processing' && totalEst > 0
+    ? Math.min(99, Math.round((elapsed / totalEst) * 100))
+    : job.status === 'done' ? 100 : 0;
 
   return (
     <Card className="bg-slate-900 border-slate-800">
@@ -108,16 +101,11 @@ function JobCard({ job, onDelete }) {
                   : <CheckCircle2 className="w-4 h-4 text-green-400 shrink-0" />}
                 <span className={job.status === 'done' ? 'text-green-400' : 'text-slate-300'}>{job.phase}</span>
                 {remaining !== null && (
-                  <div className="ml-auto flex flex-col items-end gap-1">
-                    <span className="text-amber-400 font-mono text-xs font-bold">
-                      {remaining >= 60
-                        ? `${Math.floor(remaining / 60)}:${String(remaining % 60).padStart(2, '0')}`
-                        : `${remaining} mp`}
-                    </span>
-                    {job.upload_mbps && (
-                      <span className="text-slate-500 text-xs">⚡ {job.upload_mbps} Mbit/s</span>
-                    )}
-                  </div>
+                  <span className="ml-auto text-amber-400 font-mono text-xs">
+                    ~{remaining >= 60
+                      ? `${Math.floor(remaining / 60)}:${String(remaining % 60).padStart(2, '0')} perc`
+                      : `${remaining} mp`}
+                  </span>
                 )}
               </div>
             )}
@@ -165,16 +153,8 @@ export default function ZipQueue() {
   const { data: jobs = [] } = useQuery({
     queryKey: ['zip-jobs'],
     queryFn: () => base44.entities.ZipJob.list('-created_date', 50),
-    refetchInterval: 2000, // Faster updates for real-time progress
+    refetchInterval: 3000,
   });
-
-  // Real-time subscription for instant updates
-  useEffect(() => {
-    const unsubscribe = base44.entities.ZipJob.subscribe((event) => {
-      queryClient.invalidateQueries({ queryKey: ['zip-jobs'] });
-    });
-    return () => unsubscribe();
-  }, [queryClient]);
 
   const deleteMutation = useMutation({
     mutationFn: async (job) => {

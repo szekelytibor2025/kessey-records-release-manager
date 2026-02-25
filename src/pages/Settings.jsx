@@ -7,7 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Slider } from "@/components/ui/slider";
 import { Badge } from "@/components/ui/badge";
-import { Plus, Trash2, Star, Loader2, AlertCircle, Save, Calendar, RotateCcw, Download, Code } from "lucide-react";
+import { Plus, Trash2, Star, Loader2, AlertCircle, Save, Calendar, RotateCcw } from "lucide-react";
 
 import { toast } from "sonner";
 import { useMonthlyQuota } from "@/components/scheduler/useMonthlyQuota";
@@ -21,52 +21,6 @@ export default function Settings() {
   const [isResetting, setIsResetting] = useState(false);
   const queryClient = useQueryClient();
   const { quota, updateQuota, isSaving } = useMonthlyQuota();
-  const [downloadingWorker, setDownloadingWorker] = useState(false);
-
-  const handleDownloadWorker = async () => {
-    setDownloadingWorker(true);
-    try {
-      const { data } = await base44.functions.invoke('downloadWorkerCode', {});
-      
-      // Create a simple HTML page with the code (for download as text files)
-      const content = `
-Kessey Records - ZIP Worker Code Files
-======================================
-
-Dockerfile:
-${data.files.Dockerfile}
-
----
-
-docker-compose.yml:
-${data.files['docker-compose.yml']}
-
----
-
-.env.docker:
-${data.files['.env.docker']}
-
----
-
-README.md:
-${data.files['README.md']}
-      `.trim();
-
-      const blob = new Blob([content], { type: 'text/plain' });
-      const url = window.URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = 'zip-worker-setup.txt';
-      document.body.appendChild(a);
-      a.click();
-      window.URL.revokeObjectURL(url);
-      a.remove();
-      toast.success('Worker kód letöltve!');
-    } catch (e) {
-      toast.error('Hiba a letöltés során: ' + e.message);
-    }
-    setDownloadingWorker(false);
-  };
 
   const { data: appConfigs = [] } = useQuery({
     queryKey: ["appConfigs"],
@@ -340,26 +294,6 @@ ${data.files['README.md']}
             </Button>
           </div>
         )}
-      </Card>
-
-      {/* Worker Deploy */}
-      <Card className="bg-blue-500/5 border-blue-500/20 p-6">
-        <h2 className="text-white font-semibold mb-2 flex items-center gap-2">
-          <Code className="w-4 h-4 text-blue-400" />
-          ZIP Worker Docker Deploy
-        </h2>
-        <p className="text-slate-400 text-sm mb-4">Töltsd le és telepítsd a dedikált ZIP feldolgozó workert egy VPS-en, hogy elkerüld a HTTP timeout hibákat nagyméretű fájlok feldolgozása közben.</p>
-        <Button
-          onClick={handleDownloadWorker}
-          disabled={downloadingWorker}
-          className="bg-blue-600 hover:bg-blue-700 text-white font-medium"
-        >
-          {downloadingWorker ? <Loader2 className="w-4 h-4 mr-1 animate-spin" /> : <Download className="w-4 h-4 mr-1" />}
-          Worker kód letöltése
-        </Button>
-        <p className="text-xs text-slate-600 mt-3">
-          <strong>Tartalmaz:</strong> Dockerfile, docker-compose.yml, .env template, README
-        </p>
       </Card>
 
       {/* Info */}
