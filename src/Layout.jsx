@@ -13,6 +13,7 @@ const navItems = [
   { name: "Szabad számok", page: "FreeCatalogNumbers", icon: Tag },
   { name: "Feltöltés", page: "Upload", icon: Upload },
   { name: "ZIP Feltöltés", page: "ZipUpload", icon: FileArchive },
+  { name: "ZIP Sor", page: "ZipQueue", icon: FileArchive },
   { name: "Adatcsere", page: "DataExchange", icon: ArrowLeftRight },
   { name: "Ütemező", page: "Scheduler", icon: CalendarDays },
   { name: "Díjkalkuláció", page: "FeePlanning", icon: Calculator },
