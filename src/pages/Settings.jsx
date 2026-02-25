@@ -7,7 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Slider } from "@/components/ui/slider";
 import { Badge } from "@/components/ui/badge";
-import { Plus, Trash2, Star, Loader2, AlertCircle, Save, Calendar, RotateCcw } from "lucide-react";
+import { Plus, Trash2, Star, Loader2, AlertCircle, Save, Calendar, RotateCcw, Download, Code } from "lucide-react";
 
 import { toast } from "sonner";
 import { useMonthlyQuota } from "@/components/scheduler/useMonthlyQuota";
@@ -21,6 +21,52 @@ export default function Settings() {
   const [isResetting, setIsResetting] = useState(false);
   const queryClient = useQueryClient();
   const { quota, updateQuota, isSaving } = useMonthlyQuota();
+  const [downloadingWorker, setDownloadingWorker] = useState(false);
+
+  const handleDownloadWorker = async () => {
+    setDownloadingWorker(true);
+    try {
+      const { data } = await base44.functions.invoke('downloadWorkerCode', {});
+      
+      // Create a simple HTML page with the code (for download as text files)
+      const content = `
+Kessey Records - ZIP Worker Code Files
+======================================
+
+Dockerfile:
+${data.files.Dockerfile}
+
+---
+
+docker-compose.yml:
+${data.files['docker-compose.yml']}
+
+---
+
+.env.docker:
+${data.files['.env.docker']}
+
+---
+
+README.md:
+${data.files['README.md']}
+      `.trim();
+
+      const blob = new Blob([content], { type: 'text/plain' });
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'zip-worker-setup.txt';
+      document.body.appendChild(a);
+      a.click();
+      window.URL.revokeObjectURL(url);
+      a.remove();
+      toast.success('Worker kód letöltve!');
+    } catch (e) {
+      toast.error('Hiba a letöltés során: ' + e.message);
+    }
+    setDownloadingWorker(false);
+  };
 
   const { data: appConfigs = [] } = useQuery({
     queryKey: ["appConfigs"],
