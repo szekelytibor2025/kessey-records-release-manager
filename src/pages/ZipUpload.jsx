@@ -95,15 +95,15 @@ export default function ZipUpload() {
     setResult(null);
 
     try {
-      setPhaseIndex(0); // reading
-      const arrayBuffer = await file.arrayBuffer();
-      const bytes = new Uint8Array(arrayBuffer);
-      let binary = '';
-      for (let i = 0; i < bytes.byteLength; i++) binary += String.fromCharCode(bytes[i]);
-      const base64 = btoa(binary);
-
+      // 1. Fájl feltöltése Base44 storage-ra (hogy az URL-t átadhassuk a backendnek)
       setPhaseIndex(1); // uploading
-      const response = await base44.functions.invoke('processZip', { zip_base64: base64 });
+      await new Promise(r => setTimeout(r, 0)); // UI frissítés kényszerítése
+      const { file_url } = await base44.integrations.Core.UploadFile({ file });
+
+      // 2. Feldolgozás a backenden (ZIP URL alapján – nincs timeout a base64 átviteltől)
+      setPhaseIndex(2); // unzipping
+      await new Promise(r => setTimeout(r, 0));
+      const response = await base44.functions.invoke('processZip', { zip_url: file_url });
       const data = response.data;
 
       if (data.error) {
