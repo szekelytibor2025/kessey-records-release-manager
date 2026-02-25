@@ -7,7 +7,8 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Slider } from "@/components/ui/slider";
 import { Badge } from "@/components/ui/badge";
-import { Plus, Trash2, Star, Loader2, AlertCircle, Save, Calendar, RotateCcw } from "lucide-react";
+import { Plus, Trash2, Star, Loader2, AlertCircle, Save, Calendar, RotateCcw, Copy, Code2 } from "lucide-react";
+import { useEffect, useState as useStateLocal } from "react";
 
 import { toast } from "sonner";
 import { useMonthlyQuota } from "@/components/scheduler/useMonthlyQuota";
