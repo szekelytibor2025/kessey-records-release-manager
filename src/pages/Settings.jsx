@@ -19,6 +19,7 @@ export default function Settings() {
   const [turnaroundInput, setTurnaroundInput] = useState("");
   const [resetConfirm, setResetConfirm] = useState(false);
   const [isResetting, setIsResetting] = useState(false);
+  const [downloadingProcessor, setDownloadingProcessor] = useState(false);
   const queryClient = useQueryClient();
   const { quota, updateQuota, isSaving } = useMonthlyQuota();
 
