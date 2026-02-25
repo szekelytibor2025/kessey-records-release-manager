@@ -1,10 +1,11 @@
 import React, { useMemo } from "react";
 import { base44 } from "@/api/base44Client";
 import { useQuery } from "@tanstack/react-query";
-import { Loader2, CalendarDays, AlertCircle } from "lucide-react";
+import { Loader2, CalendarDays, AlertCircle, Clock } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { groupByCatalog, buildSchedule, getCurrentMonth } from "@/components/scheduler/SchedulerEngine";
 import MonthCard from "@/components/scheduler/MonthCard";
+import { useMonthlyQuota } from "@/components/scheduler/useMonthlyQuota";
 
 export default function Scheduler() {
   const { data: tracks = [], isLoading: tracksLoading } = useQuery({
@@ -17,14 +18,15 @@ export default function Scheduler() {
     queryFn: () => base44.entities.PriorityRule.list("-priority", 100),
   });
 
-  const isLoading = tracksLoading || rulesLoading;
+  const { quota, isLoading: quotaLoading } = useMonthlyQuota();
+  const isLoading = tracksLoading || rulesLoading || quotaLoading;
 
   const schedule = useMemo(() => {
     if (tracks.length === 0) return [];
     const pendingTracks = tracks.filter(t => t.migration_status !== "migrated");
     const catalogGroups = groupByCatalog(pendingTracks, rules);
-    return buildSchedule(catalogGroups, getCurrentMonth(), 3);
-  }, [tracks, rules]);
+    return buildSchedule(catalogGroups, getCurrentMonth(), quota);
+  }, [tracks, rules, quota]);
 
   if (isLoading) {
     return (
