@@ -253,11 +253,29 @@ export default function ZipQueue() {
             />
             <div className="flex flex-col items-center gap-3">
               <Upload className={cn("w-12 h-12", dragging ? "text-amber-400" : "text-slate-500")} />
-              {uploading
-              ? <><Loader2 className="w-5 h-5 text-amber-400 animate-spin" /><p className="text-amber-400 font-medium">Feltöltés folyamatban...</p></>
-              : <><p className="text-slate-300 font-medium">Húzd ide a ZIP fájlokat, vagy kattints a kiválasztáshoz</p>
-                <p className="text-slate-500 text-sm">Több fájl is kiválasztható — sorban kerülnek feldolgozásra</p></>
-            }
+              {uploading ? (
+              <div className="w-full space-y-3">
+                {Object.entries(uploadProgress).map(([name, pct]) => (
+                  <div key={name} className="text-left">
+                    <div className="flex justify-between text-sm mb-1">
+                      <span className="text-slate-300 truncate max-w-xs">{name}</span>
+                      <span className="text-amber-400 font-mono">{pct}%</span>
+                    </div>
+                    <div className="w-full bg-slate-800 rounded-full h-1.5 overflow-hidden">
+                      <div
+                        className="h-full bg-amber-500 rounded-full transition-all duration-300"
+                        style={{ width: `${pct}%` }}
+                      />
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <>
+                <p className="text-slate-300 font-medium">Húzd ide a ZIP fájlokat, vagy kattints a kiválasztáshoz</p>
+                <p className="text-slate-500 text-sm">Több fájl is kiválasztható — sorban kerülnek feldolgozásra</p>
+              </>
+            )}
             </div>
           </div>
         </CardContent>
