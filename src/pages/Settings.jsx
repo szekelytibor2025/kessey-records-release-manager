@@ -304,6 +304,242 @@ export default function Settings() {
         )}
       </Card>
 
+      {/* Supabase Edge Function (admin only) */}
+      {user?.role === 'admin' && (
+        <Card className="bg-blue-500/5 border-blue-500/20 p-6">
+          <h2 className="text-white font-semibold mb-4 flex items-center gap-2">
+            <Code2 className="w-4 h-4 text-blue-400" />
+            Supabase Edge Function
+          </h2>
+          <p className="text-slate-400 text-sm mb-4">
+            Kihelyezheted a ZIP feldolgozást egy Supabase Edge Function-re. Másolhatod az alábbi kódot a Supabase konzolon.
+          </p>
+          {!showSupabaseCode ? (
+            <Button
+              onClick={() => setShowSupabaseCode(true)}
+              className="bg-blue-600 hover:bg-blue-700 text-white"
+            >
+              <Code2 className="w-4 h-4 mr-1" /> Kód megjelenítése
+            </Button>
+          ) : (
+            <div className="space-y-3">
+              <div className="relative">
+                <pre className="bg-slate-950 border border-slate-700 rounded-lg p-4 text-xs text-slate-300 overflow-auto max-h-96">
+{`// Supabase Edge Function: process-zip-job
+// Deploy: supabase functions deploy process-zip-job --allow-cors
+
+import * as fflate from "https://cdn.jsdelivr.net/npm/fflate@0.8.2/+esm";
+
+const MINIO_ENDPOINT = Deno.env.get("MINIO_ENDPOINT") || "";
+const MINIO_ACCESS_KEY = Deno.env.get("MINIO_ACCESS_KEY");
+const MINIO_SECRET_KEY = Deno.env.get("MINIO_SECRET_KEY");
+const MINIO_BUCKET = Deno.env.get("MINIO_BUCKET_NAME");
+const BASE44_WEBHOOK_SECRET = Deno.env.get("BASE44_WEBHOOK_SECRET");
+
+async function sha256Hex(data) {
+  const buf = typeof data === "string" ? new TextEncoder().encode(data) : data;
+  const hash = await crypto.subtle.digest("SHA-256", buf);
+  return Array.from(new Uint8Array(hash)).map(b => b.toString(16).padStart(2, "0")).join("");
+}
+
+async function hmacBytes(key, data) {
+  const k = key instanceof Uint8Array ? key : new TextEncoder().encode(key);
+  const ck = await crypto.subtle.importKey("raw", k, { name: "HMAC", hash: "SHA-256" }, false, ["sign"]);
+  return new Uint8Array(await crypto.subtle.sign("HMAC", ck, new TextEncoder().encode(data)));
+}
+
+async function hmacHex(key, data) {
+  return Array.from(await hmacBytes(key, data)).map(b => b.toString(16).padStart(2, "0")).join("");
+}
+
+async function getSigningKey(secret, dateStamp, region, service) {
+  const kDate = await hmacBytes("AWS4" + secret, dateStamp);
+  const kRegion = await hmacBytes(kDate, region);
+  const kService = await hmacBytes(kRegion, service);
+  return hmacBytes(kService, "aws4_request");
+}
+
+async function signRequest(method, path, body, contentType) {
+  const url = new URL(\`\${MINIO_ENDPOINT}/\${MINIO_BUCKET}/\${path}\`);
+  const now = new Date();
+  const dateStamp = now.toISOString().slice(0, 10).replace(/-/g, "");
+  const amzDate = now.toISOString().replace(/[:-]|\\.\d{3}/g, "").slice(0, 15) + "Z";
+  const region = "us-east-1", service = "s3";
+  const payloadHash = await sha256Hex(body);
+  const canonicalHeaders = \`content-type:\${contentType}\\nhost:\${url.host}\\nx-amz-content-sha256:\${payloadHash}\\nx-amz-date:\${amzDate}\\n\`;
+  const signedHeaders = "content-type;host;x-amz-content-sha256;x-amz-date";
+  const canonicalRequest = \`\${method}\\n\${url.pathname}\\n\\n\${canonicalHeaders}\\n\${signedHeaders}\\n\${payloadHash}\`;
+  const credentialScope = \`\${dateStamp}/\${region}/\${service}/aws4_request\`;
+  const stringToSign = \`AWS4-HMAC-SHA256\\n\${amzDate}\\n\${credentialScope}\\n\${await sha256Hex(new TextEncoder().encode(canonicalRequest))}\`;
+  const signature = await hmacHex(await getSigningKey(MINIO_SECRET_KEY, dateStamp, region, service), stringToSign);
+  return {
+    url: url.toString(),
+    headers: {
+      "Content-Type": contentType,
+      "x-amz-date": amzDate,
+      "x-amz-content-sha256": payloadHash,
+      "Authorization": \`AWS4-HMAC-SHA256 Credential=\${MINIO_ACCESS_KEY}/\${credentialScope}, SignedHeaders=\${signedHeaders}, Signature=\${signature}\`
+    }
+  };
+}
+
+async function uploadToMinio(fileBytes, fileName, contentType) {
+  const { url, headers } = await signRequest("PUT", fileName, fileBytes, contentType);
+  const res = await fetch(url, { method: "PUT", headers, body: fileBytes });
+  if (!res.ok) throw new Error(\`MinIO upload failed for \${fileName}: \${res.status}\`);
+  return \`\${MINIO_ENDPOINT}/\${MINIO_BUCKET}/\${fileName}\`;
+}
+
+async function deleteFromMinio(objectKey) {
+  try {
+    const { url, headers } = await signRequest("DELETE", objectKey, new Uint8Array(0), "application/octet-stream");
+    await fetch(url, { method: "DELETE", headers });
+  } catch (_) {}
+}
+
+function parseCSV(text) {
+  const lines = text.trim().split("\\n");
+  if (lines.length < 2) return [];
+  const headers = lines[0].split(",").map(h => h.trim().replace(/^"|"$/g, ""));
+  return lines.slice(1).map(line => {
+    const values = [], inQuotes = {};
+    let current = "", inQuotes2 = false;
+    for (let i = 0; i < line.length; i++) {
+      if (line[i] === '"') { inQuotes2 = !inQuotes2; }
+      else if (line[i] === "," && !inQuotes2) { values.push(current.trim()); current = ""; }
+      else { current += line[i]; }
+    }
+    values.push(current.trim());
+    const obj = {};
+    headers.forEach((h, i) => { obj[h] = values[i] || ""; });
+    return obj;
+  });
+}
+
+function getCol(row, ...variants) {
+  for (const v of variants) {
+    if (row[v] !== undefined && row[v] !== "") return row[v];
+  }
+  return "";
+}
+
+Deno.serve(async (req) => {
+  try {
+    const body = await req.json();
+    const { job_id, file_url, file_size_mb } = body;
+    if (!job_id || !file_url) return new Response(JSON.stringify({ error: "Missing job_id or file_url" }), { status: 400 });
+
+    // Download ZIP
+    const zipRes = await fetch(file_url);
+    if (!zipRes.ok) throw new Error(\`Failed to download ZIP: \${zipRes.status}\`);
+    const zipBuffer = new Uint8Array(await zipRes.arrayBuffer());
+
+    // Extract files
+    const files = fflate.unzipSync(zipBuffer);
+    let csvData = null;
+    const wavFiles = {};
+    let coverFile = null, coverExt = "jpg";
+    
+    for (const [name, data] of Object.entries(files)) {
+      if (name.endsWith("/") || data.length === 0) continue;
+      const baseName = name.toLowerCase().split("/").pop();
+      if (baseName.endsWith(".csv")) { csvData = new TextDecoder().decode(data); }
+      else if (baseName.endsWith(".wav")) { wavFiles[baseName.replace(/\\.wav$/, "").toUpperCase()] = data; }
+      else if (baseName.match(/\\.(jpg|jpeg|png)$/i)) {
+        coverFile = data;
+        coverExt = baseName.endsWith(".png") ? "png" : "jpg";
+      }
+    }
+
+    if (!csvData) throw new Error("No CSV found");
+    const rows = parseCSV(csvData);
+    if (!rows.length) throw new Error("Empty CSV");
+
+    const firstRow = rows[0];
+    const catalogNo = getCol(firstRow, "Catalog No.", "Catalog No", "catalog_no") || "unknown";
+
+    // Upload cover
+    let coverUrl = null;
+    if (coverFile) {
+      coverUrl = await uploadToMinio(coverFile, \`covers/\${catalogNo}.\${coverExt}\`, \`image/\${coverExt === "png" ? "png" : "jpeg"}\`);
+    }
+
+    // Process tracks
+    const tracks = [];
+    for (const row of rows) {
+      const title = getCol(row, "Original Title", "original_title");
+      const catalog = getCol(row, "Catalog No.", "Catalog No", "catalog_no");
+      if (!title || !catalog) continue;
+
+      const isrc = getCol(row, "ISRC", "isrc");
+      const wavData = isrc ? wavFiles[isrc.toUpperCase()] : null;
+      let wavUrl = null;
+
+      if (wavData) {
+        wavUrl = await uploadToMinio(wavData, \`wav/\${isrc}.wav\`, "audio/wav");
+      }
+
+      tracks.push({
+        original_title: title,
+        genre: getCol(row, "Genre", "genre"),
+        version_type: getCol(row, "Version Type", "version_type"),
+        isrc,
+        composer: getCol(row, "Composer", "composer"),
+        product_title: getCol(row, "Product Title", "product_title"),
+        catalog_no: catalog,
+        label: getCol(row, "Label", "label"),
+        upc: getCol(row, "UPC", "upc"),
+        release_date: getCol(row, "Release Date", "release_date"),
+        wav_url: wavUrl,
+        cover_url: coverUrl,
+        migration_status: "pending",
+        zip_processed: true
+      });
+    }
+
+    // Delete ZIP from MinIO
+    try {
+      const urlObj = new URL(file_url);
+      const bucketPrefix = \`/\${MINIO_BUCKET}/\`;
+      const objectKey = urlObj.pathname.startsWith(bucketPrefix)
+        ? urlObj.pathname.slice(bucketPrefix.length) : null;
+      if (objectKey) await deleteFromMinio(objectKey);
+    } catch (_) {}
+
+    return new Response(JSON.stringify({ success: true, tracks, count: tracks.length }), {
+      headers: { "Content-Type": "application/json" }
+    });
+  } catch (error) {
+    return new Response(JSON.stringify({ error: error.message }), { status: 500, headers: { "Content-Type": "application/json" } });
+  }
+});`}
+                </pre>
+              </div>
+              <div className="flex gap-2">
+                <Button
+                  onClick={() => {
+                    navigator.clipboard.writeText(document.querySelector('pre').innerText);
+                    setCopied(true);
+                    toast.success("Kód másolva!");
+                    setTimeout(() => setCopied(false), 2000);
+                  }}
+                  className="bg-green-600 hover:bg-green-700 text-white"
+                >
+                  <Copy className="w-4 h-4 mr-1" /> Másolás
+                </Button>
+                <Button
+                  onClick={() => setShowSupabaseCode(false)}
+                  variant="outline"
+                  className="border-slate-600 text-slate-400"
+                >
+                  Bezárás
+                </Button>
+              </div>
+            </div>
+          )}
+        </Card>
+      )}
+
       {/* Info */}
       <Card className="bg-amber-500/5 border-amber-500/20 p-5">
         <div className="flex gap-3">
