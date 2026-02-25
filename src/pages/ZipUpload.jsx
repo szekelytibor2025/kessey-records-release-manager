@@ -110,7 +110,7 @@ export default function ZipUpload() {
           {error && (
             <div className="mt-4 p-4 rounded-lg bg-red-500/10 border border-red-500/30 flex items-start gap-3">
               <AlertCircle className="w-5 h-5 text-red-400 shrink-0 mt-0.5" />
-              <p className="text-red-300 text-sm">{error}</p>
+              <pre className="text-red-300 text-sm whitespace-pre-wrap font-mono">{error}</pre>
             </div>
           )}
 
