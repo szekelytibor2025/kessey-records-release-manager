@@ -3,7 +3,7 @@ import { Link, useLocation } from "react-router-dom";
 import { createPageUrl } from "@/utils";
 import { 
   Music2, Upload, CalendarDays, Calculator, Settings, 
-  Menu, X, ChevronRight, Hash, Tag, FileArchive, ArrowLeftRight
+  Menu, X, ChevronRight, Hash, Tag, FileArchive, ArrowLeftRight, Terminal
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
