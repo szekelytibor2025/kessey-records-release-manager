@@ -100,6 +100,26 @@ export default function Settings() {
     createMutation.mutate({ keyword: keyword.trim(), priority: priority[0] });
   };
 
+  const handleDownloadProcessor = async () => {
+    setDownloadingProcessor(true);
+    try {
+      const { data } = await base44.functions.invoke('generateProcessorZip');
+      const blob = new Blob([data], { type: 'application/zip' });
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'zip-processor-server.zip';
+      document.body.appendChild(a);
+      a.click();
+      window.URL.revokeObjectURL(url);
+      a.remove();
+      toast.success('ZIP feldolgozó szerver letöltve!');
+    } catch (error) {
+      toast.error('Hiba a letöltéskor: ' + error.message);
+    }
+    setDownloadingProcessor(false);
+  };
+
   const getPriorityColor = (p) => {
     if (p >= 8) return "bg-red-500/20 text-red-400 border-red-500/30";
     if (p >= 5) return "bg-amber-500/20 text-amber-400 border-amber-500/30";
