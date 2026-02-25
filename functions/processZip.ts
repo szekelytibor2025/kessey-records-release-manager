@@ -126,13 +126,21 @@ Deno.serve(async (req) => {
     const user = await base44.auth.me();
     if (!user) return Response.json({ error: 'Unauthorized' }, { status: 401 });
 
-    const { zip_url } = await req.json();
-    if (!zip_url) return Response.json({ error: 'zip_url is required' }, { status: 400 });
+    const body = await req.json();
+    let zipBuffer;
 
-    // Download the ZIP file
-    const zipRes = await fetch(zip_url);
-    if (!zipRes.ok) throw new Error(`Failed to download ZIP: ${zipRes.status}`);
-    const zipBuffer = new Uint8Array(await zipRes.arrayBuffer());
+    if (body.zip_base64) {
+      // Decode base64 directly
+      const binaryStr = atob(body.zip_base64);
+      zipBuffer = new Uint8Array(binaryStr.length);
+      for (let i = 0; i < binaryStr.length; i++) zipBuffer[i] = binaryStr.charCodeAt(i);
+    } else if (body.zip_url) {
+      const zipRes = await fetch(body.zip_url);
+      if (!zipRes.ok) throw new Error(`Failed to download ZIP: ${zipRes.status}`);
+      zipBuffer = new Uint8Array(await zipRes.arrayBuffer());
+    } else {
+      return Response.json({ error: 'zip_base64 or zip_url is required' }, { status: 400 });
+    }
 
     // Decompress ZIP using fflate
     const files = fflate.unzipSync(zipBuffer);
