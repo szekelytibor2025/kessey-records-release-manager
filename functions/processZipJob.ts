@@ -230,8 +230,6 @@ Deno.serve(async (req) => {
 
     return Response.json({ success: true, created, skipped, upload_mbps: measuredMbps });
   } catch (error) {
-    const { job_id } = await req.json().catch(() => ({}));
-    // Try to mark job as error
     try {
       const base44 = createClientFromRequest(req);
       if (job_id) {
