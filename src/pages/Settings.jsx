@@ -263,6 +263,39 @@ export default function Settings() {
         </div>
       </Card>
 
+      {/* Reset */}
+      <Card className="bg-red-500/5 border-red-500/20 p-6">
+        <h2 className="text-white font-semibold mb-1 flex items-center gap-2">
+          <RotateCcw className="w-4 h-4 text-red-400" />
+          Alkalmazás reset
+        </h2>
+        <p className="text-slate-500 text-sm mb-4">Törli az összes számot, szabályt, zárolást, konfigurációt és szabad katalógusszámot. Ez visszafordíthatatlan!</p>
+        {!resetConfirm ? (
+          <Button
+            variant="outline"
+            className="border-red-500/40 text-red-400 hover:bg-red-500/10 hover:text-red-300"
+            onClick={() => setResetConfirm(true)}
+          >
+            <RotateCcw className="w-4 h-4 mr-1" /> Reset indítása
+          </Button>
+        ) : (
+          <div className="flex items-center gap-3 flex-wrap">
+            <span className="text-red-300 text-sm font-medium">Biztos vagy benne? Ez nem vonható vissza!</span>
+            <Button
+              className="bg-red-600 hover:bg-red-700 text-white"
+              onClick={handleReset}
+              disabled={isResetting}
+            >
+              {isResetting ? <Loader2 className="w-4 h-4 mr-1 animate-spin" /> : <RotateCcw className="w-4 h-4 mr-1" />}
+              Igen, reset!
+            </Button>
+            <Button variant="ghost" className="text-slate-400" onClick={() => setResetConfirm(false)}>
+              Mégsem
+            </Button>
+          </div>
+        )}
+      </Card>
+
       {/* Info */}
       <Card className="bg-amber-500/5 border-amber-500/20 p-5">
         <div className="flex gap-3">
