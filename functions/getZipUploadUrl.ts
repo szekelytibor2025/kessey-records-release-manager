@@ -90,10 +90,16 @@ Deno.serve(async (req) => {
     const user = await base44.auth.me();
     if (!user) return Response.json({ error: 'Unauthorized' }, { status: 401 });
 
-    const { file_name } = await req.json();
-    if (!file_name) return Response.json({ error: 'file_name required' }, { status: 400 });
+    const { file_name, file_type } = await req.json();
+    if (!file_name || !file_type) return Response.json({ error: 'file_name and file_type required' }, { status: 400 });
 
-    const objectKey = `zip-uploads/${Date.now()}_${file_name.replace(/[^a-zA-Z0-9._-]/g, '_')}`;
+    // Route files to different directories based on type
+    let folder = 'uploads';
+    if (file_type === 'csv') folder = 'csv-uploads';
+    else if (file_type === 'cover') folder = 'cover-uploads';
+    else if (file_type === 'wav') folder = 'wav-uploads';
+
+    const objectKey = `${folder}/${Date.now()}_${file_name.replace(/[^a-zA-Z0-9._-]/g, '_')}`;
     const presignedUrl = await generatePresignedPutUrl(objectKey);
     const fileUrl = `${MINIO_ENDPOINT}/${MINIO_BUCKET}/${objectKey}`;
 
