@@ -80,7 +80,8 @@ export default function Upload() {
 
   const importMutation = useMutation({
     mutationFn: async () => {
-      const records = parsedData.map(row => ({
+      if (newRows.length === 0) throw new Error("Nincs új, importálható szám.");
+      const records = newRows.map(row => ({
         original_title: row["Original Title"] || "",
         genre: row["Genre"] || "",
         version_type: row["Version Type"] || "",
@@ -97,13 +98,13 @@ export default function Upload() {
       return base44.entities.Track.bulkCreate(records);
     },
     onSuccess: () => {
-      toast.success(`${parsedData.length} szám sikeresen importálva!`);
+      toast.success(`${newRows.length} szám sikeresen importálva!`);
       queryClient.invalidateQueries({ queryKey: ["tracks"] });
       setParsedData([]);
       setFileName("");
     },
     onError: (err) => {
-      toast.error("Hiba az importálás során: " + err.message);
+      toast.error("Hiba: " + err.message);
     },
   });
 
