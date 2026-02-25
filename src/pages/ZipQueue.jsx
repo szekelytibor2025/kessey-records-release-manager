@@ -163,29 +163,7 @@ export default function ZipQueue() {
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ['zip-jobs'] }),
   });
 
-  // Queue processor: fire-and-forget, don't await — just kick off the job
-  const startedJobsRef = useRef(new Set());
-
-  useEffect(() => {
-    const nextQueued = jobs.find(j => j.status === 'queued');
-    const isProcessing = jobs.some(j => j.status === 'processing');
-    if (!nextQueued || isProcessing) return;
-    if (startedJobsRef.current.has(nextQueued.id)) return;
-
-    startedJobsRef.current.add(nextQueued.id);
-    // Fire and forget — the backend updates the ZipJob entity directly
-    // The 3-second polling above picks up status changes automatically
-    fetch(`/api/functions/processZipJob`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${base44.auth.getToken?.() || ''}`,
-      },
-      body: JSON.stringify({ job_id: nextQueued.id }),
-    }).catch(() => {
-      startedJobsRef.current.delete(nextQueued.id);
-    });
-  }, [jobs]);
+  // Processing is now triggered automatically via entity automation when a ZipJob is created
 
   const handleFiles = async (fileList) => {
     const files = Array.from(fileList).filter(f => f.name.endsWith('.zip'));
