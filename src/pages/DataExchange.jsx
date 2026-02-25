@@ -2,9 +2,9 @@ import React, { useState, useEffect } from "react";
 import { base44 } from "@/api/base44Client";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Loader2 } from "lucide-react";
-import ReleaseCard from "@/components/dataexchange/ReleaseCard";
-import LockBusyDialog from "@/components/dataexchange/LockBusyDialog";
-import TurnaroundBanner from "@/components/dataexchange/TurnaroundBanner";
+import ReleaseCard from "@/components/dataexchange/ReleaseCard.jsx";
+import LockBusyDialog from "@/components/dataexchange/LockBusyDialog.jsx";
+import TurnaroundBanner from "@/components/dataexchange/TurnaroundBanner.jsx";
 
 export default function DataExchange() {
   const queryClient = useQueryClient();
