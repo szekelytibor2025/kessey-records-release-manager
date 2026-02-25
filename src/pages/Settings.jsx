@@ -68,6 +68,32 @@ export default function Settings() {
     },
   });
 
+  const handleReset = async () => {
+    setIsResetting(true);
+    try {
+      const [tracks, rules, locks, configs, freeCatalogs] = await Promise.all([
+        base44.entities.Track.list(),
+        base44.entities.PriorityRule.list(),
+        base44.entities.LockedRelease.list(),
+        base44.entities.AppConfig.list(),
+        base44.entities.FreeCatalogNo.list(),
+      ]);
+      await Promise.all([
+        ...tracks.map(r => base44.entities.Track.delete(r.id)),
+        ...rules.map(r => base44.entities.PriorityRule.delete(r.id)),
+        ...locks.map(r => base44.entities.LockedRelease.delete(r.id)),
+        ...configs.map(r => base44.entities.AppConfig.delete(r.id)),
+        ...freeCatalogs.map(r => base44.entities.FreeCatalogNo.delete(r.id)),
+      ]);
+      queryClient.invalidateQueries();
+      toast.success("Az alkalmazás sikeresen resetelve!");
+      setResetConfirm(false);
+    } catch (e) {
+      toast.error("Hiba a reset során: " + e.message);
+    }
+    setIsResetting(false);
+  };
+
   const handleAdd = () => {
     if (!keyword.trim()) return;
     createMutation.mutate({ keyword: keyword.trim(), priority: priority[0] });
