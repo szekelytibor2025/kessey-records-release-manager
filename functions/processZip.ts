@@ -143,14 +143,18 @@ Deno.serve(async (req) => {
     let coverExt = 'jpg';
 
     for (const [name, data] of Object.entries(files)) {
+      // Skip directory entries (zero-length or ends with /)
+      if (name.endsWith('/') || data.length === 0) continue;
       const lowerName = name.toLowerCase();
+      // Use only the base filename, ignoring any folder structure (including UPC folder)
       const baseName = lowerName.split('/').pop();
+      if (!baseName) continue;
       if (baseName.endsWith('.csv')) {
         csvData = new TextDecoder().decode(data);
       } else if (baseName.endsWith('.wav')) {
-        // Extract ISRC from filename (remove extension)
-        const isrc = baseName.replace('.wav', '').toUpperCase();
-        wavFiles[isrc] = data;
+        // Key by full base filename (without extension), uppercased — matched against ISRC later
+        const key = baseName.replace(/\.wav$/, '').toUpperCase();
+        wavFiles[key] = data;
       } else if (baseName.endsWith('.jpg') || baseName.endsWith('.jpeg') || baseName.endsWith('.png')) {
         coverFile = data;
         coverExt = baseName.endsWith('.png') ? 'png' : 'jpg';
