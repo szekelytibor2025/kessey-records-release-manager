@@ -3,7 +3,7 @@ import { Link, useLocation } from "react-router-dom";
 import { createPageUrl } from "@/utils";
 import { 
   Music2, Upload, CalendarDays, Calculator, Settings, 
-  Menu, X, ChevronRight, Hash, Tag, FileArchive, ArrowLeftRight, Terminal
+  Menu, X, ChevronRight, Hash, Tag, FileArchive, ArrowLeftRight
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -18,7 +18,6 @@ const navItems = [
   { name: "Ütemező", page: "Scheduler", icon: CalendarDays },
   { name: "Díjkalkuláció", page: "FeePlanning", icon: Calculator },
   { name: "Beállítások", page: "Settings", icon: Settings },
-  { name: "Supabase Telepítés", page: "SupabaseSetup", icon: Terminal },
 ];
 
 export default function Layout({ children, currentPageName }) {
