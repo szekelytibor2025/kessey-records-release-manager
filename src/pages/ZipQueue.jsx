@@ -224,8 +224,11 @@ export default function ZipQueue() {
             />
             <div className="flex flex-col items-center gap-3">
               <Upload className={cn("w-12 h-12", dragging ? "text-amber-400" : "text-slate-500")} />
-              <p className="text-slate-300 font-medium">Húzd ide a ZIP fájlokat, vagy kattints a kiválasztáshoz</p>
-              <p className="text-slate-500 text-sm">Több fájl is kiválasztható — sorban kerülnek feldolgozásra</p>
+              {uploading
+              ? <><Loader2 className="w-5 h-5 text-amber-400 animate-spin" /><p className="text-amber-400 font-medium">Feltöltés folyamatban...</p></>
+              : <><p className="text-slate-300 font-medium">Húzd ide a ZIP fájlokat, vagy kattints a kiválasztáshoz</p>
+                <p className="text-slate-500 text-sm">Több fájl is kiválasztható — sorban kerülnek feldolgozásra</p></>
+            }
             </div>
           </div>
         </CardContent>
