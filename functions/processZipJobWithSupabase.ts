@@ -1,6 +1,7 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.6';
 
 const SUPABASE_FUNCTION_URL = 'https://zagrlgyitjkkkqikpyfg.supabase.co/functions/v1/process-zip-job';
+const ZIP_WEBHOOK_SECRET = Deno.env.get('ZIP_WEBHOOK_SECRET') || '';
 
 Deno.serve(async (req) => {
   let job_id = null;
