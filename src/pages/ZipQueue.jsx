@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from "react";
+import React, { useState, useRef, useEffect, useMemo } from "react";
 import { base44 } from "@/api/base44Client";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
@@ -153,8 +153,16 @@ export default function ZipQueue() {
   const { data: jobs = [] } = useQuery({
     queryKey: ['zip-jobs'],
     queryFn: () => base44.entities.ZipJob.list('-created_date', 50),
-    refetchInterval: 3000,
+    refetchInterval: 2000, // Faster updates for real-time progress
   });
+
+  // Real-time subscription for instant updates
+  useEffect(() => {
+    const unsubscribe = base44.entities.ZipJob.subscribe((event) => {
+      queryClient.invalidateQueries({ queryKey: ['zip-jobs'] });
+    });
+    return () => unsubscribe();
+  }, [queryClient]);
 
   const deleteMutation = useMutation({
     mutationFn: async (job) => {
