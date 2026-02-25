@@ -45,7 +45,7 @@ export default function ZipUpload() {
     const data = response.data;
 
     if (data.error) {
-      setError(data.error);
+      setError(data.error + (data.stack ? '\n\n' + data.stack.split('\n').slice(0,3).join('\n') : ''));
     } else {
       setResult(data);
     }
