@@ -108,11 +108,16 @@ function JobCard({ job, onDelete }) {
                   : <CheckCircle2 className="w-4 h-4 text-green-400 shrink-0" />}
                 <span className={job.status === 'done' ? 'text-green-400' : 'text-slate-300'}>{job.phase}</span>
                 {remaining !== null && (
-                  <span className="ml-auto text-amber-400 font-mono text-xs">
-                    ~{remaining >= 60
-                      ? `${Math.floor(remaining / 60)}:${String(remaining % 60).padStart(2, '0')} perc`
-                      : `${remaining} mp`}
-                  </span>
+                  <div className="ml-auto flex flex-col items-end gap-1">
+                    <span className="text-amber-400 font-mono text-xs font-bold">
+                      {remaining >= 60
+                        ? `${Math.floor(remaining / 60)}:${String(remaining % 60).padStart(2, '0')}`
+                        : `${remaining} mp`}
+                    </span>
+                    {job.upload_mbps && (
+                      <span className="text-slate-500 text-xs">⚡ {job.upload_mbps} Mbit/s</span>
+                    )}
+                  </div>
                 )}
               </div>
             )}
