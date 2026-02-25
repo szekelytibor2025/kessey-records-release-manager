@@ -1,10 +1,14 @@
 import React, { useState, useEffect } from "react";
 import { base44 } from "@/api/base44Client";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useNavigate } from "react-router-dom";
+import { createPageUrl } from "@/utils";
 import { Loader2 } from "lucide-react";
-import ReleaseCard from "@/components/dataexchange/ReleaseCard.jsx";
 import LockBusyDialog from "@/components/dataexchange/LockBusyDialog.jsx";
 import TurnaroundBanner from "@/components/dataexchange/TurnaroundBanner.jsx";
+import { Card, CardContent } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Lock, ChevronRight } from "lucide-react";
 
 export default function DataExchange() {
   const queryClient = useQueryClient();
