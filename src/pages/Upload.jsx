@@ -1,8 +1,9 @@
 import React, { useState, useCallback } from "react";
 import { base44 } from "@/api/base44Client";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQueryClient, useQuery } from "@tanstack/react-query";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Upload as UploadIcon, FileUp, CheckCircle2, AlertCircle, Loader2, Trash2 } from "lucide-react";
 import { toast } from "sonner";
@@ -48,6 +49,23 @@ export default function Upload() {
   const [fileName, setFileName] = useState("");
   const [dragOver, setDragOver] = useState(false);
   const queryClient = useQueryClient();
+
+  const { data: existingTracks = [] } = useQuery({
+    queryKey: ["tracks"],
+    queryFn: () => base44.entities.Track.list("-created_date", 500),
+  });
+
+  const existingISRCs = new Set(existingTracks.map(t => t.isrc).filter(Boolean));
+  const existingCatalogs = new Set(existingTracks.map(t => t.catalog_no).filter(Boolean));
+
+  const isDuplicate = (row) => {
+    const isrc = row["ISRC"]?.trim();
+    const cat = row["Catalog No."]?.trim();
+    return (isrc && existingISRCs.has(isrc)) || (cat && existingCatalogs.has(cat));
+  };
+
+  const newRows = parsedData.filter(row => !isDuplicate(row));
+  const dupRows = parsedData.filter(row => isDuplicate(row));
 
   const handleFile = useCallback((file) => {
     if (!file) return;
