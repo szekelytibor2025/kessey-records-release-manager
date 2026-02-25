@@ -340,13 +340,12 @@ const BASE44_WEBHOOK_URL = "https://kessey-release-flow.base44.app/api/functions
 const BASE44_API_KEY = "cc558a9b70f341909b70dcb9fb1a03a6";
 
 async function notifyProgress(job_id, phase, upload_mbps) {
-  if (!BASE44_WEBHOOK_URL) return;
   try {
-    await fetch(BASE44_WEBHOOK_URL, {
+    await fetch("https://kessey-release-flow.base44.app/api/functions/updateZipJobProgress", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        "Authorization": \`Bearer \${ZIP_WEBHOOK_SECRET}\`
+        "Authorization": \`Bearer cc558a9b70f341909b70dcb9fb1a03a6\`
       },
       body: JSON.stringify({ job_id, phase, upload_mbps })
     });
