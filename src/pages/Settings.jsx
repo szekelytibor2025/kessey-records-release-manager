@@ -118,6 +118,38 @@ export default function Settings() {
         </div>
       </Card>
 
+      {/* Turnaround date */}
+      <Card className="bg-slate-900/40 border-slate-800/50 p-6">
+        <h2 className="text-white font-semibold mb-4 flex items-center gap-2">
+          <Calendar className="w-4 h-4 text-green-400" />
+          Fordulónap (Adatcsere határidő)
+        </h2>
+        <div className="space-y-4">
+          <div>
+            <Label className="text-slate-400 text-xs uppercase tracking-wider">
+              Jelenlegi fordulónap: <span className="text-green-400 font-bold text-sm">{turnaroundDate || "Nincs beállítva"}</span>
+            </Label>
+            <Input
+              type="date"
+              value={turnaroundInput || turnaroundDate}
+              onChange={(e) => setTurnaroundInput(e.target.value)}
+              className="mt-2 bg-slate-800/50 border-slate-700 text-white"
+            />
+            <p className="text-xs text-slate-600 mt-1.5">
+              A fordulónap után az Adatcsere oldalon nem lehet új ütemezést végezni.
+            </p>
+          </div>
+          <Button
+            onClick={() => turnaroundMutation.mutate(turnaroundInput || turnaroundDate)}
+            disabled={turnaroundMutation.isPending || (!turnaroundInput && !turnaroundDate)}
+            className="bg-green-600 hover:bg-green-700 text-white font-medium"
+          >
+            {turnaroundMutation.isPending ? <Loader2 className="w-4 h-4 mr-1 animate-spin" /> : <Save className="w-4 h-4 mr-1" />}
+            Mentés
+          </Button>
+        </div>
+      </Card>
+
       {/* Add rule */}
       <Card className="bg-slate-900/40 border-slate-800/50 p-6">
         <h2 className="text-white font-semibold mb-4 flex items-center gap-2">
