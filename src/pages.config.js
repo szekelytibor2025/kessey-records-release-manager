@@ -48,27 +48,29 @@
  * The mainPage value must match a key in the PAGES object exactly.
  */
 import Catalog from './pages/Catalog';
-import Upload from './pages/Upload';
-import Settings from './pages/Settings';
-import Scheduler from './pages/Scheduler';
-import FeePlanning from './pages/FeePlanning';
 import CatalogNumbers from './pages/CatalogNumbers';
-import FreeCatalogNumbers from './pages/FreeCatalogNumbers';
-import ZipUpload from './pages/ZipUpload';
 import DataExchange from './pages/DataExchange';
+import FeePlanning from './pages/FeePlanning';
+import FreeCatalogNumbers from './pages/FreeCatalogNumbers';
+import Scheduler from './pages/Scheduler';
+import Settings from './pages/Settings';
+import Upload from './pages/Upload';
+import ZipUpload from './pages/ZipUpload';
+import ReleaseDetail from './pages/ReleaseDetail';
 import __Layout from './Layout.jsx';
 
 
 export const PAGES = {
     "Catalog": Catalog,
-    "Upload": Upload,
-    "Settings": Settings,
-    "Scheduler": Scheduler,
-    "FeePlanning": FeePlanning,
     "CatalogNumbers": CatalogNumbers,
-    "FreeCatalogNumbers": FreeCatalogNumbers,
-    "ZipUpload": ZipUpload,
     "DataExchange": DataExchange,
+    "FeePlanning": FeePlanning,
+    "FreeCatalogNumbers": FreeCatalogNumbers,
+    "Scheduler": Scheduler,
+    "Settings": Settings,
+    "Upload": Upload,
+    "ZipUpload": ZipUpload,
+    "ReleaseDetail": ReleaseDetail,
 }
 
 export const pagesConfig = {
