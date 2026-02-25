@@ -83,22 +83,33 @@ export default function DataExchange() {
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
           {releases.map(release => {
-            const isLockedByMe = lockedRelease === release.catalog_no;
             const lockInfo = locks.find(l => l.catalog_no === release.catalog_no);
-            const isLockedByOther = lockInfo && lockInfo.locked_by !== currentUser?.email;
+            const isLockedByOther = currentUser && lockInfo && lockInfo.locked_by !== currentUser.email;
             return (
-              <ReleaseCard
+              <Card
                 key={release.catalog_no}
-                release={release}
-                isOpen={isLockedByMe}
-                isLockedByOther={isLockedByOther}
-                lockedByName={isLockedByOther ? (lockInfo.locked_by_name || lockInfo.locked_by) : null}
-                turnaroundDate={turnaroundDate}
-                onOpen={() => handleOpen(release.catalog_no)}
-                onClose={() => handleClose(release.catalog_no)}
-                onSchedule={() => scheduleMutation.mutate(release.catalog_no)}
-                isScheduling={scheduleMutation.isPending && scheduleMutation.variables === release.catalog_no}
-              />
+                className={`bg-slate-900 border cursor-pointer transition-all duration-200 hover:border-amber-500/40 hover:shadow-lg hover:shadow-amber-500/5 ${isLockedByOther ? 'border-red-500/30' : 'border-slate-800'}`}
+                onClick={() => handleOpen(release.catalog_no)}
+              >
+                <CardContent className="p-4 flex items-center gap-4">
+                  {release.cover_url && (
+                    <img src={release.cover_url} alt="borító" className="w-14 h-14 rounded-lg object-cover shrink-0 border border-slate-700" />
+                  )}
+                  <div className="min-w-0 flex-1">
+                    <div className="flex items-center gap-2 flex-wrap mb-1">
+                      <Badge className="bg-amber-500/20 text-amber-300 border-amber-500/30 text-xs">{release.catalog_no}</Badge>
+                      {isLockedByOther && (
+                        <Badge className="bg-red-500/20 text-red-300 border-red-500/30 text-xs flex items-center gap-1">
+                          <Lock className="w-3 h-3" /> {lockInfo.locked_by_name || lockInfo.locked_by}
+                        </Badge>
+                      )}
+                    </div>
+                    <p className="text-white font-medium truncate">{release.product_title || release.catalog_no}</p>
+                    <p className="text-slate-500 text-xs mt-0.5">{release.tracks.length} szám</p>
+                  </div>
+                  <ChevronRight className="w-4 h-4 text-slate-600 shrink-0" />
+                </CardContent>
+              </Card>
             );
           })}
         </div>
