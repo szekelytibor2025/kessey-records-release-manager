@@ -163,18 +163,28 @@ export default function ZipQueue() {
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ['zip-jobs'] }),
   });
 
-  // Queue processor: pick next queued job and process it
-  useEffect(() => {
-    const queued = jobs.find(j => j.status === 'queued');
-    const isProcessing = jobs.some(j => j.status === 'processing');
-    if (!queued || isProcessing || processingRef.current) return;
+  // Queue processor: fire-and-forget, don't await — just kick off the job
+  const startedJobsRef = useRef(new Set());
 
-    processingRef.current = true;
-    base44.functions.invoke('processZipJob', { job_id: queued.id })
-      .finally(() => {
-        processingRef.current = false;
-        queryClient.invalidateQueries({ queryKey: ['zip-jobs'] });
-      });
+  useEffect(() => {
+    const nextQueued = jobs.find(j => j.status === 'queued');
+    const isProcessing = jobs.some(j => j.status === 'processing');
+    if (!nextQueued || isProcessing) return;
+    if (startedJobsRef.current.has(nextQueued.id)) return;
+
+    startedJobsRef.current.add(nextQueued.id);
+    // Fire and forget — the backend updates the ZipJob entity directly
+    // The 3-second polling above picks up status changes automatically
+    fetch(`/api/functions/processZipJob`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${base44.auth.getToken?.() || ''}`,
+      },
+      body: JSON.stringify({ job_id: nextQueued.id }),
+    }).catch(() => {
+      startedJobsRef.current.delete(nextQueued.id);
+    });
   }, [jobs]);
 
   const handleFiles = async (fileList) => {
