@@ -6,7 +6,7 @@ const messages = [
   (name) => `🚧 Hoppá! ${name} éppen ott turkál. Várj, amíg végez!`,
   (name) => `☕ ${name} foglalja ezt a kiadványt. Igyál egy kávét addig!`,
   (name) => `🎵 ${name} már benne van a számban. Ne zavard a produkcót!`,
-  (name) => `🔒 ${name} az uraság itt. Gyere vissza késöbb!`,
+  (name) => `🔒 ${name} az uraság itt. Gyere vissza később!`,
   (name) => `🐢 ${name} dolgozik rajta. Légy türelmes, mint egy lemez B-oldala!`,
 ];
 
