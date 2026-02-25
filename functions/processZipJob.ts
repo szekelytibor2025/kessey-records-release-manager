@@ -118,6 +118,8 @@ Deno.serve(async (req) => {
     job_id = body.job_id;
     if (!job_id) return Response.json({ error: 'job_id required' }, { status: 400 });
 
+    if (!job_id) return Response.json({ error: 'job_id required' }, { status: 400 });
+
     // Load job
     const job = await base44.asServiceRole.entities.ZipJob.get(job_id);
     if (!job) return Response.json({ error: 'Job not found' }, { status: 404 });
