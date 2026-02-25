@@ -107,63 +107,31 @@ function mapCSVToTrack(row) {
   return track;
 }
 
-// ── Streaming ZIP extraction ─────────────────────────────────────────────────
-// Extracts the ZIP using fflate's streaming API so we never hold ALL
-// decompressed files in memory simultaneously.
-// Returns: { csvData, wavFiles: Map<ISRC_UPPER → Uint8Array>, coverFile, coverExt }
-function extractZipStreaming(zipBuffer) {
-  return new Promise((resolve, reject) => {
-    const wavFiles = {};
-    let csvData = null;
-    let coverFile = null;
-    let coverExt = 'jpg';
+// ── ZIP extraction ───────────────────────────────────────────────────────────
+// Uses unzipSync — straightforward and reliable in Deno.
+// Returns: { csvData, wavFiles: { ISRC_UPPER → Uint8Array }, coverFile, coverExt }
+function extractZip(zipBuffer) {
+  const files = fflate.unzipSync(zipBuffer);
+  const wavFiles = {};
+  let csvData = null;
+  let coverFile = null;
+  let coverExt = 'jpg';
 
-    const unzip = new fflate.Unzip();
-    unzip.register(fflate.UnzipInflate);
-
-    unzip.onfile = (file) => {
-      const lowerName = file.name.toLowerCase();
-      const baseName = lowerName.split('/').pop();
-      if (!baseName || file.name.endsWith('/')) return;
-
-      const isCSV  = baseName.endsWith('.csv');
-      const isWAV  = baseName.endsWith('.wav');
-      const isCover = baseName.endsWith('.jpg') || baseName.endsWith('.jpeg') || baseName.endsWith('.png');
-
-      if (!isCSV && !isWAV && !isCover) return; // skip unneeded files
-
-      const chunks = [];
-      file.ondata = (err, chunk, final) => {
-        if (err) return; // skip errors silently
-        chunks.push(chunk);
-        if (final) {
-          // Merge chunks
-          const total = chunks.reduce((s, c) => s + c.length, 0);
-          const merged = new Uint8Array(total);
-          let offset = 0;
-          for (const c of chunks) { merged.set(c, offset); offset += c.length; }
-
-          if (isCSV) {
-            csvData = new TextDecoder().decode(merged);
-          } else if (isWAV) {
-            const key = baseName.replace(/\.wav$/, '').toUpperCase();
-            wavFiles[key] = merged;
-          } else if (isCover) {
-            coverFile = merged;
-            coverExt = baseName.endsWith('.png') ? 'png' : 'jpg';
-          }
-        }
-      };
-      file.start();
-    };
-
-    try {
-      unzip.push(zipBuffer, true);
-      resolve({ csvData, wavFiles, coverFile, coverExt });
-    } catch (e) {
-      reject(e);
+  for (const [name, data] of Object.entries(files)) {
+    if (name.endsWith('/') || data.length === 0) continue;
+    const baseName = name.toLowerCase().split('/').pop();
+    if (!baseName) continue;
+    if (baseName.endsWith('.csv')) {
+      csvData = new TextDecoder().decode(data);
+    } else if (baseName.endsWith('.wav')) {
+      wavFiles[baseName.replace(/\.wav$/, '').toUpperCase()] = data;
+    } else if (baseName.endsWith('.jpg') || baseName.endsWith('.jpeg') || baseName.endsWith('.png')) {
+      coverFile = data;
+      coverExt = baseName.endsWith('.png') ? 'png' : 'jpg';
     }
-  });
+  }
+
+  return { csvData, wavFiles, coverFile, coverExt };
 }
 
 // ── Main handler ─────────────────────────────────────────────────────────────
