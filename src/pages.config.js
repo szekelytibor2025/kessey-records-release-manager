@@ -52,6 +52,8 @@ import Upload from './pages/Upload';
 import Settings from './pages/Settings';
 import Scheduler from './pages/Scheduler';
 import FeePlanning from './pages/FeePlanning';
+import CatalogNumbers from './pages/CatalogNumbers';
+import FreeCatalogNumbers from './pages/FreeCatalogNumbers';
 import __Layout from './Layout.jsx';
 
 
@@ -61,6 +63,8 @@ export const PAGES = {
     "Settings": Settings,
     "Scheduler": Scheduler,
     "FeePlanning": FeePlanning,
+    "CatalogNumbers": CatalogNumbers,
+    "FreeCatalogNumbers": FreeCatalogNumbers,
 }
 
 export const pagesConfig = {
