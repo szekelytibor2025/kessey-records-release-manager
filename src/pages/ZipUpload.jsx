@@ -187,6 +187,61 @@ export default function ZipUpload() {
             </div>
           )}
 
+          {uploading && (
+            <div className="mt-4 space-y-3">
+              {/* Visszaszámláló */}
+              <div className="flex items-center justify-between px-1">
+                <span className="text-slate-400 text-sm flex items-center gap-2">
+                  <Loader2 className="w-4 h-4 animate-spin text-amber-400" />
+                  Feldolgozás folyamatban…
+                </span>
+                {remaining !== null && (
+                  <span className="text-amber-400 font-mono text-sm font-semibold">
+                    ~{remaining >= 60
+                      ? `${Math.floor(remaining / 60)}:${String(remaining % 60).padStart(2, '0')} perc`
+                      : `${remaining} mp`}
+                  </span>
+                )}
+              </div>
+
+              {/* Fázisok listája */}
+              <div className="bg-slate-800/60 rounded-xl p-4 space-y-2">
+                {PHASES.map((phase, i) => {
+                  const Icon = phase.icon;
+                  const done = i < phaseIndex;
+                  const active = i === phaseIndex;
+                  return (
+                    <div key={phase.id} className={cn(
+                      "flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition-all",
+                      done  && "text-green-400",
+                      active && "text-white bg-amber-500/10 border border-amber-500/20",
+                      !done && !active && "text-slate-600"
+                    )}>
+                      {done ? (
+                        <CheckCircle2 className="w-4 h-4 shrink-0 text-green-400" />
+                      ) : active ? (
+                        <Loader2 className="w-4 h-4 shrink-0 animate-spin text-amber-400" />
+                      ) : (
+                        <Icon className="w-4 h-4 shrink-0" />
+                      )}
+                      <span>{phase.label}</span>
+                    </div>
+                  );
+                })}
+              </div>
+
+              {/* Progress bar */}
+              {remaining !== null && totalEstRef.current > 0 && (
+                <div className="w-full bg-slate-800 rounded-full h-1.5 overflow-hidden">
+                  <div
+                    className="h-full bg-amber-500 rounded-full transition-all duration-1000"
+                    style={{ width: `${Math.min(100, Math.round(((totalEstRef.current - remaining) / totalEstRef.current) * 100))}%` }}
+                  />
+                </div>
+              )}
+            </div>
+          )}
+
           <Button
             className="w-full mt-4 bg-amber-500 hover:bg-amber-600 text-black font-semibold"
             disabled={!file || uploading}
