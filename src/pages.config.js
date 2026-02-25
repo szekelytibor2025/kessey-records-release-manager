@@ -52,11 +52,12 @@ import CatalogNumbers from './pages/CatalogNumbers';
 import DataExchange from './pages/DataExchange';
 import FeePlanning from './pages/FeePlanning';
 import FreeCatalogNumbers from './pages/FreeCatalogNumbers';
+import ReleaseDetail from './pages/ReleaseDetail';
 import Scheduler from './pages/Scheduler';
 import Settings from './pages/Settings';
 import Upload from './pages/Upload';
 import ZipUpload from './pages/ZipUpload';
-import ReleaseDetail from './pages/ReleaseDetail';
+import ZipQueue from './pages/ZipQueue';
 import __Layout from './Layout.jsx';
 
 
@@ -66,11 +67,12 @@ export const PAGES = {
     "DataExchange": DataExchange,
     "FeePlanning": FeePlanning,
     "FreeCatalogNumbers": FreeCatalogNumbers,
+    "ReleaseDetail": ReleaseDetail,
     "Scheduler": Scheduler,
     "Settings": Settings,
     "Upload": Upload,
     "ZipUpload": ZipUpload,
-    "ReleaseDetail": ReleaseDetail,
+    "ZipQueue": ZipQueue,
 }
 
 export const pagesConfig = {
