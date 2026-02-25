@@ -37,20 +37,30 @@ export default function ZipUpload() {
     setError(null);
     setResult(null);
 
-    // Read ZIP as base64 and send directly to backend
-    const arrayBuffer = await file.arrayBuffer();
-    const bytes = new Uint8Array(arrayBuffer);
-    let binary = '';
-    for (let i = 0; i < bytes.byteLength; i++) binary += String.fromCharCode(bytes[i]);
-    const base64 = btoa(binary);
+    try {
+      // Read ZIP as base64 and send directly to backend
+      const arrayBuffer = await file.arrayBuffer();
+      const bytes = new Uint8Array(arrayBuffer);
+      let binary = '';
+      for (let i = 0; i < bytes.byteLength; i++) binary += String.fromCharCode(bytes[i]);
+      const base64 = btoa(binary);
 
-    const response = await base44.functions.invoke('processZip', { zip_base64: base64 });
-    const data = response.data;
+      const response = await base44.functions.invoke('processZip', { zip_base64: base64 });
+      const data = response.data;
 
-    if (data.error) {
-      setError(data.error + (data.stack ? '\n\n' + data.stack.split('\n').slice(0,3).join('\n') : ''));
-    } else {
-      setResult(data);
+      if (data.error) {
+        setError(data.error + (data.stack ? '\n\nStack:\n' + data.stack.split('\n').slice(0, 4).join('\n') : ''));
+      } else {
+        setResult(data);
+      }
+    } catch (err) {
+      const serverError = err?.response?.data?.error || err?.response?.data?.message;
+      const serverStack = err?.response?.data?.stack;
+      if (serverError) {
+        setError(serverError + (serverStack ? '\n\nStack:\n' + serverStack.split('\n').slice(0, 4).join('\n') : ''));
+      } else {
+        setError(`HTTP ${err?.response?.status || '?'}: ${err?.message}`);
+      }
     }
     setUploading(false);
   };
