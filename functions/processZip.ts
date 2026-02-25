@@ -200,7 +200,8 @@ Deno.serve(async (req) => {
       const track = mapCSVToTrack(row);
       if (!track.original_title || !track.catalog_no) { skipped++; continue; }
 
-      // Duplicate check: only skip if ISRC matches (catalog_no can repeat across tracks in same release)
+      // Duplicate check: skip only if ISRC already exists
+      console.log('[DEBUG] track.isrc:', track.isrc, '| track.catalog_no:', track.catalog_no, '| track.original_title:', track.original_title);
       if (track.isrc && existingISRCs.has(track.isrc)) {
         skipped++;
         continue;
