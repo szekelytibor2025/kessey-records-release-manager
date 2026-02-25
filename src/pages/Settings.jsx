@@ -19,6 +19,29 @@ export default function Settings() {
   const queryClient = useQueryClient();
   const { quota, updateQuota, isSaving } = useMonthlyQuota();
 
+  const { data: appConfigs = [] } = useQuery({
+    queryKey: ["appConfigs"],
+    queryFn: () => base44.entities.AppConfig.list(),
+  });
+
+  const turnaroundDate = appConfigs.find(c => c.key === 'turnaround_date')?.value || "";
+  const turnaroundId = appConfigs.find(c => c.key === 'turnaround_date')?.id || null;
+
+  const turnaroundMutation = useMutation({
+    mutationFn: async (date) => {
+      if (turnaroundId) {
+        return base44.entities.AppConfig.update(turnaroundId, { value: date });
+      } else {
+        return base44.entities.AppConfig.create({ key: 'turnaround_date', value: date });
+      }
+    },
+    onSuccess: () => {
+      toast.success("Fordulónap mentve!");
+      queryClient.invalidateQueries({ queryKey: ["appConfigs"] });
+      setTurnaroundInput("");
+    },
+  });
+
   const { data: rules = [], isLoading } = useQuery({
     queryKey: ["priorityRules"],
     queryFn: () => base44.entities.PriorityRule.list("-priority", 100),
