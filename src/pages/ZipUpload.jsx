@@ -27,7 +27,7 @@ const PHASES = [
 ];
 
 function estimatePhaseEnd(fileSizeMB, phaseIndex) {
-  const totalSec = fileSizeMB * SECONDS_PER_MB;
+  const totalSec = estimateTotalSeconds(fileSizeMB);
   let elapsed = 0;
   for (let i = 0; i <= phaseIndex; i++) elapsed += PHASES[i].weight * totalSec;
   return elapsed;
