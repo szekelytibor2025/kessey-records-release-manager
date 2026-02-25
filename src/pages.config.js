@@ -54,10 +54,10 @@ import FeePlanning from './pages/FeePlanning';
 import FreeCatalogNumbers from './pages/FreeCatalogNumbers';
 import ReleaseDetail from './pages/ReleaseDetail';
 import Scheduler from './pages/Scheduler';
-import Settings from './pages/Settings';
 import Upload from './pages/Upload';
-import ZipUpload from './pages/ZipUpload';
 import ZipQueue from './pages/ZipQueue';
+import ZipUpload from './pages/ZipUpload';
+import Settings from './pages/Settings';
 import __Layout from './Layout.jsx';
 
 
@@ -69,10 +69,10 @@ export const PAGES = {
     "FreeCatalogNumbers": FreeCatalogNumbers,
     "ReleaseDetail": ReleaseDetail,
     "Scheduler": Scheduler,
-    "Settings": Settings,
     "Upload": Upload,
-    "ZipUpload": ZipUpload,
     "ZipQueue": ZipQueue,
+    "ZipUpload": ZipUpload,
+    "Settings": Settings,
 }
 
 export const pagesConfig = {
