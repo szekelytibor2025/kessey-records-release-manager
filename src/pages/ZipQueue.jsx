@@ -165,23 +165,23 @@ export default function ZipQueue() {
 
   // Processing is now triggered automatically via entity automation when a ZipJob is created
 
+  const [uploading, setUploading] = useState(false);
+
   const handleFiles = async (fileList) => {
     const files = Array.from(fileList).filter(f => f.name.endsWith('.zip'));
+    if (files.length === 0) return;
+    setUploading(true);
     for (const file of files) {
-      try {
-        // Upload to Base44 storage
-        const { file_url } = await base44.integrations.Core.UploadFile({ file });
-        await base44.entities.ZipJob.create({
-          file_name: file.name,
-          file_url,
-          file_size_mb: parseFloat((file.size / 1024 / 1024).toFixed(2)),
-          status: 'queued',
-        });
-      } catch (err) {
-        console.error('Upload failed for', file.name, err);
-      }
+      const { file_url } = await base44.integrations.Core.UploadFile({ file });
+      await base44.entities.ZipJob.create({
+        file_name: file.name,
+        file_url,
+        file_size_mb: parseFloat((file.size / 1024 / 1024).toFixed(2)),
+        status: 'queued',
+      });
+      await queryClient.invalidateQueries({ queryKey: ['zip-jobs'] });
     }
-    queryClient.invalidateQueries({ queryKey: ['zip-jobs'] });
+    setUploading(false);
   };
 
   const handleDrop = (e) => {
