@@ -18,8 +18,7 @@ function estimateTotalSeconds(fileSizeMB) {
 }
 
 const PHASES = [
-  { id: 'reading',    label: 'Fájl beolvasása és kódolása',     icon: Archive,  weight: 0.05 },
-  { id: 'uploading',  label: 'Feltöltés a szerverre',            icon: Upload,   weight: 0.10 },
+  { id: 'uploading',  label: 'Fájl feltöltése a szerverre',      icon: Upload,   weight: 0.15 },
   { id: 'unzipping',  label: 'ZIP kicsomagolása',                icon: Archive,  weight: 0.05 },
   { id: 'cover',      label: 'Borítókép feltöltése (MinIO)',      icon: Image,    weight: 0.05 },
   { id: 'wav',        label: 'WAV fájlok feltöltése (MinIO)',     icon: Music,    weight: 0.55 },
