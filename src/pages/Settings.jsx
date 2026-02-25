@@ -580,12 +580,12 @@ Deno.serve(async (req) => {
             <p className="text-slate-300 text-sm font-medium">Supabase Environment Variables:</p>
             <div className="space-y-2 text-xs font-mono">
               <div className="bg-slate-950 p-2 rounded border border-slate-700">
-                <p className="text-slate-500">ZIP_WEBHOOK_SECRET=</p>
-                <p className="text-amber-400">{Deno.env.get('ZIP_WEBHOOK_SECRET') || '(másold be innen a titkot)'}</p>
+                <p className="text-slate-500">BASE44_WEBHOOK_URL=</p>
+                <p className="text-blue-400">https://kessey-release-flow.base44.app/api/functions/updateZipJobProgress</p>
               </div>
               <div className="bg-slate-950 p-2 rounded border border-slate-700">
-                <p className="text-slate-500">BASE44_WEBHOOK_URL=</p>
-                <p className="text-blue-400">https://your-base44-domain.com/functions/updateZipJobProgress</p>
+                <p className="text-slate-500">BASE44_API_KEY=</p>
+                <p className="text-green-400">cc558a9b70f341909b70dcb9fb1a03a6</p>
               </div>
             </div>
             <p className="text-slate-500 text-xs">Az updateZipJobProgress function a Supabase-ben webhook-ként meghívódik, és realtime updateli az ZipJob státuszát.</p>
