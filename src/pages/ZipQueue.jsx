@@ -157,7 +157,9 @@ export default function ZipQueue() {
   });
 
   const deleteMutation = useMutation({
-    mutationFn: (id) => base44.entities.ZipJob.delete(id),
+    mutationFn: async (job) => {
+      await base44.entities.ZipJob.delete(job.id);
+    },
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ['zip-jobs'] }),
   });
 
