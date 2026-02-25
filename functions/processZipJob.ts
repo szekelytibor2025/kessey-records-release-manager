@@ -63,6 +63,16 @@ async function uploadToMinio(fileBytes, fileName, contentType) {
   return `${MINIO_ENDPOINT}/${MINIO_BUCKET}/${fileName}`;
 }
 
+async function deleteFromMinio(objectKey) {
+  try {
+    const { url, headers } = await signRequest('DELETE', objectKey, new Uint8Array(0), 'application/octet-stream');
+    // Override content-type for DELETE
+    await fetch(url, { method: 'DELETE', headers });
+  } catch (_) {
+    // Ignore delete errors — not critical
+  }
+}
+
 function parseCSV(text) {
   const lines = text.trim().split('\n');
   if (lines.length < 2) return [];
