@@ -46,15 +46,27 @@ export default function Scheduler() {
       </div>
 
       {/* Summary */}
-      <Card className="bg-amber-500/5 border-amber-500/20 p-5">
-        <div className="flex gap-3">
-          <AlertCircle className="w-5 h-5 text-amber-400 shrink-0 mt-0.5" />
-          <div className="text-sm text-slate-400">
-            <p className="text-amber-400 font-medium mb-1">Ütemezési logika</p>
-            <p>A rendszer a prioritási szabályok alapján automatikusan 3 kiadást rendel havonta. A magasabb prioritású kiadások (pl. P10) előnyt élveznek. Az ütemezés a <strong>Katalógus szám</strong> alapján történik.</p>
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <Card className="bg-amber-500/5 border-amber-500/20 p-5">
+          <div className="flex gap-3">
+            <AlertCircle className="w-5 h-5 text-amber-400 shrink-0 mt-0.5" />
+            <div className="text-sm text-slate-400">
+              <p className="text-amber-400 font-medium mb-1">Ütemezési logika</p>
+              <p>A rendszer a prioritási szabályok alapján automatikusan <strong className="text-amber-400">{quota}</strong> kiadást rendel havonta. A magasabb prioritású kiadások előnyt élveznek.</p>
+            </div>
           </div>
-        </div>
-      </Card>
+        </Card>
+        <Card className="bg-slate-900/40 border-slate-800/50 p-5 flex items-center gap-4">
+          <div className="w-12 h-12 rounded-xl bg-blue-500/10 flex items-center justify-center shrink-0">
+            <Clock className="w-6 h-6 text-blue-400" />
+          </div>
+          <div>
+            <p className="text-slate-500 text-xs uppercase tracking-wider">Teljes migráció ideje</p>
+            <p className="text-white font-bold text-2xl mt-0.5">{schedule.length} hónap</p>
+            <p className="text-slate-500 text-xs mt-0.5">{quota} kiadás / hó kvótával</p>
+          </div>
+        </Card>
+      </div>
 
       {schedule.length === 0 ? (
         <Card className="bg-slate-900/40 border-slate-800/50 p-12 text-center">
