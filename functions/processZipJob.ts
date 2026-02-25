@@ -229,6 +229,17 @@ Deno.serve(async (req) => {
       ? parseFloat(((totalUploadBytes * 8 / 1e6) / (totalUploadMs / 1000)).toFixed(2))
       : null;
 
+    // Delete ZIP from MinIO after successful processing
+    try {
+      const zipUrl = new URL(job.file_url);
+      // object key is everything after /<bucket>/
+      const bucketPrefix = `/${MINIO_BUCKET}/`;
+      const objectKey = zipUrl.pathname.startsWith(bucketPrefix)
+        ? zipUrl.pathname.slice(bucketPrefix.length)
+        : null;
+      if (objectKey) await deleteFromMinio(objectKey);
+    } catch (_) {}
+
     // Mark done
     await base44.asServiceRole.entities.ZipJob.update(job_id, {
       status: 'done',
