@@ -54,6 +54,7 @@ import Scheduler from './pages/Scheduler';
 import FeePlanning from './pages/FeePlanning';
 import CatalogNumbers from './pages/CatalogNumbers';
 import FreeCatalogNumbers from './pages/FreeCatalogNumbers';
+import ZipUpload from './pages/ZipUpload';
 import __Layout from './Layout.jsx';
 
 
@@ -65,6 +66,7 @@ export const PAGES = {
     "FeePlanning": FeePlanning,
     "CatalogNumbers": CatalogNumbers,
     "FreeCatalogNumbers": FreeCatalogNumbers,
+    "ZipUpload": ZipUpload,
 }
 
 export const pagesConfig = {
