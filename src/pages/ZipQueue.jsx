@@ -49,18 +49,25 @@ function JobCard({ job, onDelete }) {
 
   useEffect(() => {
     if (job.status === 'processing' && job.started_at) {
+      setElapsed(Math.round((Date.now() - new Date(job.started_at).getTime()) / 1000));
       timerRef.current = setInterval(() => {
         setElapsed(Math.round((Date.now() - new Date(job.started_at).getTime()) / 1000));
-      }, 1000);
+      }, 500); // Update more frequently for smoother countdown
     }
     return () => clearInterval(timerRef.current);
   }, [job.status, job.started_at]);
 
-  const totalEst = estimateTotalSeconds(job.file_size_mb, job.upload_mbps);
-  const remaining = job.status === 'processing' ? Math.max(0, totalEst - elapsed) : null;
-  const progress = job.status === 'processing' && totalEst > 0
-    ? Math.min(99, Math.round((elapsed / totalEst) * 100))
-    : job.status === 'done' ? 100 : 0;
+  const totalEst = useMemo(() => estimateTotalSeconds(job.file_size_mb, job.upload_mbps), [job.file_size_mb, job.upload_mbps]);
+  const remaining = useMemo(() => {
+    if (job.status !== 'processing') return null;
+    return Math.max(0, totalEst - elapsed);
+  }, [totalEst, elapsed, job.status]);
+
+  const progress = useMemo(() => {
+    if (job.status === 'processing' && totalEst > 0) return Math.min(99, Math.round((elapsed / totalEst) * 100));
+    if (job.status === 'done') return 100;
+    return 0;
+  }, [job.status, totalEst, elapsed]);
 
   return (
     <Card className="bg-slate-900 border-slate-800">
