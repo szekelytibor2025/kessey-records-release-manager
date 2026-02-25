@@ -115,7 +115,8 @@ Deno.serve(async (req) => {
     if (!user) return Response.json({ error: 'Unauthorized' }, { status: 401 });
 
     const body = await req.json();
-    job_id = body.job_id;
+    // Support both direct call { job_id } and automation payload { event: { entity_id } }
+    job_id = body.job_id || body.event?.entity_id;
     if (!job_id) return Response.json({ error: 'job_id required' }, { status: 400 });
 
     // Load job
